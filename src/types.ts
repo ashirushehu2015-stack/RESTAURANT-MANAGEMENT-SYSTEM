@@ -59,11 +59,20 @@ export interface PurchaseOrder {
   id: string;
   supplierId: string;
   supplierName: string;
-  description: string;
-  totalAmount: number;
+  commodity: string;          // e.g. "Long Grain Rice", "Boneless Beef", "Fresh Tomatoes"
+  quantity: number;           // e.g. 10
+  unit: string;               // e.g. "kg", "bags", "crates", "liters", "cartons", "packs", "pieces"
+  unitCost: number;           // unit cost in Naira (₦)
+  totalAmount: number;        // auto-calculated: quantity * unitCost
+  paymentMode: 'Cash' | 'Bank Transfer' | 'POS Machine';
+  paymentStatus: 'Fully Paid' | 'Partially Paid' | 'Unpaid';
+  amountPaid: number;         // amount paid so far
+  balance: number;            // outstanding balance: totalAmount - amountPaid
   orderDate: string;
   expectedDelivery: string;
-  status: 'Pending' | 'Received' | 'Paid';
+  deliveryStatus: 'Pending' | 'Received';
+  description?: string;       // optional / backward compatibility
+  status?: string;            // optional / backward compatibility
 }
 
 export interface RestaurantOrder {
