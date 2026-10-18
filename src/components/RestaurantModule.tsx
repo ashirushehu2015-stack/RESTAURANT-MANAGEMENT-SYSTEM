@@ -6,6 +6,7 @@ import { InventoryModule } from './InventoryModule';
 import { SuppliersModule } from './SuppliersModule';
 import { ExpensesModule } from './ExpensesModule';
 import { OrderHistoryModule } from './OrderHistoryModule';
+import { CustomerCRMModule } from './CustomerCRMModule';
 import { TableFloorPlanView } from './TableFloorPlanView';
 import { ReservationsModule } from './ReservationsModule';
 import { FinancialsModule } from './FinancialsModule';
@@ -1737,9 +1738,26 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
         />
       )}
 
+      {/* TAB: CUSTOMER CRM */}
+      {activeTab === 'customer_crm' && (
+        <CustomerCRMModule
+          orders={orders}
+          onOpenInPos={(table, custName) => {
+            if (table) setTableOrRoom(table);
+            if (custName) setCustomerName(custName);
+            setActiveTab('pos');
+          }}
+          onOpenReservations={(custName) => {
+            if (custName) setCustomerName(custName);
+            setActiveTab('reservations');
+          }}
+          onReprintReceipt={printThermalReceipt}
+          cashierName={cashierName}
+        />
+      )}
+
       {/* OTHER TABS UNDER CONSTRUCTION */}
       {[
-        'customer_crm',
         'staff',
         'audit_trail',
         'settings',

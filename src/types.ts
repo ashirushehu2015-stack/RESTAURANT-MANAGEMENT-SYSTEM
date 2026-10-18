@@ -330,3 +330,44 @@ export interface Reservation {
   specialRequests?: string;
   createdAt: string;
 }
+
+export type CustomerTier = 'Bronze' | 'Silver' | 'Gold' | 'Platinum VIP';
+export type CustomerSegment = 'VIP / Elite' | 'Regular / Loyal' | 'Corporate Account' | 'New Diner' | 'At-Risk / Inactive';
+
+export interface CustomerProfile {
+  id: string; // e.g. "CUST-001"
+  name: string;
+  phone: string;
+  email: string;
+  company?: string;
+  segment: CustomerSegment;
+  tier: CustomerTier;
+  loyaltyPoints: number;
+  totalSpent: number;
+  totalOrders: number;
+  lastVisitDate: string; // YYYY-MM-DD or formatted
+  averageOrderValue: number;
+  favoriteDish?: string;
+  preferredSeating?: string;
+  dietaryRestrictions?: string[];
+  birthday?: string;
+  anniversary?: string;
+  notes?: string;
+  rating?: number; // 1 - 5 stars
+  createdAt: string;
+  address?: string;
+  status: 'Active' | 'Inactive';
+}
+
+export interface MarketingCampaign {
+  id: string;
+  name: string;
+  targetSegment: CustomerSegment | 'All';
+  channel: 'WhatsApp' | 'SMS' | 'Email';
+  title: string;
+  messageTemplate: string;
+  discountOffer?: string;
+  status: 'Active' | 'Scheduled' | 'Draft' | 'Completed';
+  reachCount?: number;
+  conversionRate?: string;
+}
