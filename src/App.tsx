@@ -2,7 +2,7 @@ import { RestaurantModule } from './components/RestaurantModule';
 import { LoginPage } from './components/LoginPage';
 import { CustomerMenuPortal } from './components/CustomerMenuPortal';
 import { INITIAL_MENU_ITEMS, INITIAL_RESTAURANT_ORDERS } from './data/restaurantData';
-import type { RestaurantMenuItem, RestaurantOrder, AuditLog } from './types';
+import type { RestaurantMenuItem, RestaurantOrder, AuditLog, PaymentMethod } from './types';
 import { useState, useEffect } from 'react';
 
 const MENU_STORAGE_KEY = 'restaurant_management_menu_items';
@@ -185,12 +185,34 @@ function App() {
     setIsLoggedIn(false);
   };
 
+  const handleUpdateOrderPayment = (
+    orderId: string,
+    paymentMethod: PaymentMethod,
+    transactionRef: string
+  ) => {
+    setOrders((prev) => {
+      const updated = prev.map((o) =>
+        o.id === orderId
+          ? {
+              ...o,
+              paymentStatus: 'Paid' as const,
+              paymentMethod,
+              transactionRef
+            }
+          : o
+      );
+      persistOrders(updated);
+      return updated;
+    });
+  };
+
   // If customer scans QR code, show Customer Menu Portal immediately (no login required)
   if (isGuestMode) {
     return (
       <CustomerMenuPortal
         menuItems={menuItems}
         onPlaceOrder={handlePlaceOrder}
+        onUpdateOrderPayment={handleUpdateOrderPayment}
         initialTable={guestTableParam}
         onExitGuestMode={() => {
           setIsGuestMode(false);

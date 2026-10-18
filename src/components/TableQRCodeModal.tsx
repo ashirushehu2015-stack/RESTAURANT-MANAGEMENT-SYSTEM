@@ -274,15 +274,9 @@ export const TableQRCodeModal: React.FC<TableQRCodeModalProps> = ({
 
             <button
               type="button"
-              onClick={() => {
-                if (onOpenCustomerView) {
-                  onOpenCustomerView(activeTable.tableNumber);
-                  onClose();
-                } else {
-                  window.open(tableUrl, '_blank');
-                }
-              }}
+              onClick={() => window.open(tableUrl, '_blank')}
               className="py-2.5 bg-[#0b1221] hover:bg-[#1e293b] text-white text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+              title="Open Customer Table Menu in New Tab"
             >
               <ExternalLink className="w-4 h-4 text-[#C8B282]" />
               <span>Preview Menu</span>

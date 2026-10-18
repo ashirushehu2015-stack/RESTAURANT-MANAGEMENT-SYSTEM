@@ -29,12 +29,16 @@ import {
   Receipt,
   Phone,
   User,
-  ExternalLink
+  ExternalLink,
+  Bell,
+  Printer,
+  Copy
 } from 'lucide-react';
 
 interface CustomerMenuPortalProps {
   menuItems: RestaurantMenuItem[];
   onPlaceOrder: (order: RestaurantOrder) => void;
+  onUpdateOrderPayment?: (orderId: string, paymentMethod: PaymentMethod, transactionRef: string) => void;
   initialTable?: string;
   onExitGuestMode?: () => void;
 }
@@ -42,6 +46,7 @@ interface CustomerMenuPortalProps {
 export const CustomerMenuPortal: React.FC<CustomerMenuPortalProps> = ({
   menuItems = [],
   onPlaceOrder,
+  onUpdateOrderPayment,
   initialTable = 'Table 08 (Garden)',
   onExitGuestMode
 }) => {
@@ -63,6 +68,54 @@ export const CustomerMenuPortal: React.FC<CustomerMenuPortalProps> = ({
 
   // Order Confirmed Tracker State
   const [confirmedOrder, setConfirmedOrder] = useState<RestaurantOrder | null>(null);
+
+  // Digital Receipt & In-Portal Payment Modals
+  const [showCustomerReceipt, setShowCustomerReceipt] = useState(false);
+  const [isPayOnlineModalOpen, setIsPayOnlineModalOpen] = useState(false);
+  const [postOrderChannel, setPostOrderChannel] = useState<'transfer' | 'card'>('transfer');
+  const [isPayingPostOrder, setIsPayingPostOrder] = useState(false);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [copiedAcct, setCopiedAcct] = useState(false);
+
+  const triggerToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 3500);
+  };
+
+  const handleCallWaiter = () => {
+    triggerToast(`🔔 Waiter service requested for ${selectedTable}. A staff member will attend to you shortly!`);
+  };
+
+  const handleCopyBankAcct = (acctNum: string) => {
+    navigator.clipboard.writeText(acctNum);
+    setCopiedAcct(true);
+    triggerToast('Copied bank account number to clipboard!');
+    setTimeout(() => setCopiedAcct(false), 2500);
+  };
+
+  const handleSettlePostOrderPayment = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!confirmedOrder) return;
+    setIsPayingPostOrder(true);
+    const method: PaymentMethod = postOrderChannel === 'transfer' ? 'Bank Transfer' : 'POS Machine';
+    const ref = `QR-PAY-${Date.now().toString().slice(-6)}`;
+
+    setTimeout(() => {
+      const updated: RestaurantOrder = {
+        ...confirmedOrder,
+        paymentStatus: 'Paid',
+        paymentMethod: method,
+        transactionRef: ref
+      };
+      setConfirmedOrder(updated);
+      if (onUpdateOrderPayment) {
+        onUpdateOrderPayment(confirmedOrder.id, method, ref);
+      }
+      setIsPayingPostOrder(false);
+      setIsPayOnlineModalOpen(false);
+      triggerToast('✅ Payment verified! Your table order is settled in full.');
+    }, 800);
+  };
 
   // Dynamic Categories
   const categories = useMemo(() => {
@@ -187,23 +240,40 @@ export const CustomerMenuPortal: React.FC<CustomerMenuPortalProps> = ({
   // VIEW 1: LIVE ORDER STATUS TRACKER (IF ORDER JUST PLACED)
   // =========================================================================
   if (confirmedOrder) {
+    const isPaid = confirmedOrder.paymentStatus === 'Paid';
+
     return (
-      <div className="min-h-screen bg-[#FDFCF9] flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-[#E5E2DA] p-6 space-y-6 text-center animate-fadeIn">
+      <div className="min-h-screen bg-[#FDFCF9] flex flex-col items-center justify-center p-4 relative">
+        {/* Toast Notification */}
+        {toastMsg && (
+          <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-[#0b1221] text-[#C8B282] border border-[#C8B282] px-4 py-2.5 rounded-xl shadow-2xl text-xs font-bold flex items-center gap-2 animate-fadeIn">
+            <span>{toastMsg}</span>
+          </div>
+        )}
+
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-[#E5E2DA] p-6 space-y-5 text-center animate-fadeIn">
           {/* Success Check */}
-          <div className="w-16 h-16 rounded-full bg-[#ecfdf5] text-[#024628] flex items-center justify-center mx-auto border-2 border-[#166c43]">
+          <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto border-2 ${
+            isPaid 
+              ? 'bg-[#ecfdf5] text-[#024628] border-[#166c43]' 
+              : 'bg-[#fffbeb] text-[#b45309] border-[#d97706]'
+          }`}>
             <CheckCircle2 className="w-10 h-10" />
           </div>
 
           <div>
-            <span className="text-[10px] font-black uppercase text-[#b45309] tracking-widest px-2.5 py-0.5 bg-[#fef3c7] rounded-full">
-              ORDER RECEIVED & CONFIRMED
+            <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${
+              isPaid
+                ? 'bg-[#ecfdf5] text-[#024628] border border-emerald-300'
+                : 'bg-[#fef3c7] text-[#b45309] border border-amber-300'
+            }`}>
+              {isPaid ? '✓ ORDER RECEIVED & PAID IN FULL' : '⏳ ORDER CONFIRMED • PENDING PAYMENT'}
             </span>
             <h2 className="text-xl font-bold text-[#1A1A1A] mt-2">
               Order {confirmedOrder.id}
             </h2>
             <p className="text-xs text-[#73706B] mt-0.5">
-              Assigned to: <strong>{confirmedOrder.tableOrRoom}</strong>
+              Assigned Table: <strong className="text-[#1A1A1A]">{confirmedOrder.tableOrRoom}</strong>
             </p>
           </div>
 
@@ -214,7 +284,7 @@ export const CustomerMenuPortal: React.FC<CustomerMenuPortalProps> = ({
                 ✓
               </div>
               <div>
-                <strong className="text-xs text-[#1A1A1A] block">1. Order Confirmed</strong>
+                <strong className="text-xs text-[#1A1A1A] block">1. Order Received</strong>
                 <span className="text-[10px] text-[#73706B]">Sent straight to kitchen controller</span>
               </div>
             </div>
@@ -225,7 +295,7 @@ export const CustomerMenuPortal: React.FC<CustomerMenuPortalProps> = ({
               </div>
               <div>
                 <strong className="text-xs text-[#b45309] block">2. Chef Preparing Meal</strong>
-                <span className="text-[10px] text-[#73706B]">Target serving time: ~15-20 mins</span>
+                <span className="text-[10px] text-[#73706B]">Estimated prep: ~15-20 mins</span>
               </div>
             </div>
 
@@ -250,16 +320,58 @@ export const CustomerMenuPortal: React.FC<CustomerMenuPortalProps> = ({
               </div>
             ))}
             <div className="flex justify-between font-bold text-sm text-[#024628] pt-2 border-t border-[#E5E2DA]">
-              <span>Grand Total:</span>
+              <span>Grand Total (incl. 5% VAT):</span>
               <span className="font-mono">{formatNaira(confirmedOrder.grandTotal)}</span>
-            </div>
-            <div className="text-[10px] text-[#73706B] pt-0.5">
-              Payment Status: <strong>{confirmedOrder.paymentStatus} ({confirmedOrder.paymentMethod})</strong>
             </div>
           </div>
 
+          {/* Payment Status Box */}
+          {isPaid ? (
+            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-left text-xs space-y-1">
+              <div className="flex items-center gap-1.5 font-bold text-emerald-900">
+                <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+                <span>Bill Settled in Full ({confirmedOrder.paymentMethod})</span>
+              </div>
+              <p className="text-[11px] text-emerald-800">
+                Ref: <span className="font-mono font-bold">{confirmedOrder.transactionRef || 'VERIFIED'}</span> • Electronic receipt is ready.
+              </p>
+            </div>
+          ) : (
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-left text-xs space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 font-bold text-amber-900">
+                  <Clock className="w-4 h-4 text-amber-700" />
+                  <span>Due: {formatNaira(confirmedOrder.grandTotal)}</span>
+                </div>
+                <span className="text-[10px] font-bold uppercase px-2 py-0.5 bg-amber-200 text-amber-900 rounded">
+                  Pay at Table
+                </span>
+              </div>
+              <p className="text-[11px] text-amber-800">
+                You can pay cash or POS card machine at your table, or settle online now from your phone:
+              </p>
+              <button
+                type="button"
+                onClick={() => setIsPayOnlineModalOpen(true)}
+                className="w-full py-2.5 bg-[#024628] hover:bg-[#035933] text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+              >
+                <CreditCard className="w-4 h-4 text-[#C8B282]" />
+                <span>Pay Online Now ({formatNaira(confirmedOrder.grandTotal)})</span>
+              </button>
+            </div>
+          )}
+
           {/* Action Buttons */}
-          <div className="space-y-2">
+          <div className="space-y-2 pt-1">
+            <button
+              type="button"
+              onClick={() => setShowCustomerReceipt(true)}
+              className="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-[#1A1A1A] text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-gray-200"
+            >
+              <Receipt className="w-4 h-4 text-[#C8B282]" />
+              <span>View Electronic Bill / Receipt</span>
+            </button>
+
             <button
               type="button"
               onClick={() => setConfirmedOrder(null)}
@@ -267,17 +379,238 @@ export const CustomerMenuPortal: React.FC<CustomerMenuPortalProps> = ({
             >
               Order Additional Items or Drinks
             </button>
-            {onExitGuestMode && (
-              <button
-                type="button"
-                onClick={onExitGuestMode}
-                className="w-full py-2 bg-transparent text-xs text-[#73706B] hover:text-[#1A1A1A] font-semibold"
-              >
-                Exit to Staff Console
-              </button>
-            )}
+
+            <button
+              type="button"
+              onClick={handleCallWaiter}
+              className="w-full py-2 bg-transparent text-xs text-[#b45309] hover:underline font-bold flex items-center justify-center gap-1 cursor-pointer"
+            >
+              <Bell className="w-3.5 h-3.5" />
+              <span>Call Waiter to {confirmedOrder.tableOrRoom}</span>
+            </button>
           </div>
         </div>
+
+        {/* MODAL 1: CUSTOMER DIGITAL RECEIPT */}
+        {showCustomerReceipt && (
+          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+            <div className="bg-white max-w-sm w-full p-6 border border-[#1A1A1A] rounded-2xl shadow-2xl space-y-4 text-xs font-mono">
+              <div className="flex justify-between items-start border-b border-[#E5E2DA] pb-3">
+                <div>
+                  <h3 className="font-bold text-sm text-[#1A1A1A]">
+                    RESTAURANT MANAGEMENT
+                  </h3>
+                  <p className="text-[10px] text-[#73706B]">Official Customer Digital Receipt</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowCustomerReceipt(false)}
+                  className="text-xs font-bold text-gray-500 hover:text-black p-1 cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-1.5 text-left text-[11px]">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Order ID:</span>
+                  <span className="font-bold">{confirmedOrder.id}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Table:</span>
+                  <span className="font-bold">{confirmedOrder.tableOrRoom}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Guest:</span>
+                  <span>{confirmedOrder.customerName}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Date/Time:</span>
+                  <span>{confirmedOrder.createdAt}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Payment:</span>
+                  <span className={`font-bold ${isPaid ? 'text-emerald-700' : 'text-amber-700'}`}>
+                    {confirmedOrder.paymentStatus.toUpperCase()} ({confirmedOrder.paymentMethod})
+                  </span>
+                </div>
+                {confirmedOrder.transactionRef && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Ref:</span>
+                    <span className="font-bold">{confirmedOrder.transactionRef}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t border-b border-[#E5E2DA] py-2 space-y-1 text-left text-[11px]">
+                {confirmedOrder.items.map((i, idx) => (
+                  <div key={idx} className="flex justify-between">
+                    <span>{i.quantity}x {i.menuItem.name}</span>
+                    <span>{formatNaira(i.menuItem.price * i.quantity)}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-1 text-left text-[11px]">
+                <div className="flex justify-between text-gray-600">
+                  <span>Subtotal:</span>
+                  <span>{formatNaira(confirmedOrder.subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-gray-600">
+                  <span>VAT (5%):</span>
+                  <span>{formatNaira(confirmedOrder.tax)}</span>
+                </div>
+                <div className="flex justify-between font-bold text-sm pt-1 border-t border-black">
+                  <span>Total Amount:</span>
+                  <span>{formatNaira(confirmedOrder.grandTotal)}</span>
+                </div>
+              </div>
+
+              <div className="text-center text-[10px] text-gray-500 pt-1">
+                *** THANK YOU FOR DINING WITH US ***
+              </div>
+
+              <div className="flex gap-2 pt-2 border-t border-[#E5E2DA]">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="flex-1 py-2 bg-[#0b1221] text-white text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5 text-[#C8B282]" />
+                  <span>Print Receipt</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCustomerReceipt(false)}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL 2: IN-PORTAL POST-ORDER ONLINE PAYMENT */}
+        {isPayOnlineModalOpen && (
+          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+            <form onSubmit={handleSettlePostOrderPayment} className="bg-white max-w-sm w-full p-6 rounded-2xl shadow-2xl border border-[#1A1A1A] space-y-4 text-xs">
+              <div className="flex justify-between items-start border-b border-[#E5E2DA] pb-3">
+                <div>
+                  <h3 className="font-bold text-sm text-[#1A1A1A]">
+                    Settle Table Bill Online
+                  </h3>
+                  <p className="text-[11px] text-[#73706B] mt-0.5">
+                    Order {confirmedOrder.id} • {confirmedOrder.tableOrRoom}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsPayOnlineModalOpen(false)}
+                  className="text-xs font-bold text-gray-500 hover:text-black p-1 cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="p-3 bg-[#FDFCF9] border border-[#E5E2DA] rounded-xl flex justify-between items-center">
+                <span className="text-xs text-gray-600 font-medium">Total Bill to Settle:</span>
+                <span className="text-base font-bold text-[#024628] font-mono">
+                  {formatNaira(confirmedOrder.grandTotal)}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPostOrderChannel('transfer')}
+                  className={`p-2.5 rounded-xl border text-center font-bold text-xs cursor-pointer transition-all ${
+                    postOrderChannel === 'transfer'
+                      ? 'border-[#024628] bg-emerald-50 text-[#024628]'
+                      : 'border-gray-200 bg-white text-gray-600'
+                  }`}
+                >
+                  Instant Transfer
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPostOrderChannel('card')}
+                  className={`p-2.5 rounded-xl border text-center font-bold text-xs cursor-pointer transition-all ${
+                    postOrderChannel === 'card'
+                      ? 'border-[#024628] bg-emerald-50 text-[#024628]'
+                      : 'border-gray-200 bg-white text-gray-600'
+                  }`}
+                >
+                  Debit Card
+                </button>
+              </div>
+
+              {postOrderChannel === 'transfer' ? (
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl space-y-2 text-left">
+                  <span className="text-[10px] font-bold uppercase text-blue-900 block">
+                    Designated Restaurant Account
+                  </span>
+                  <div className="text-xs font-semibold text-blue-900">
+                    <div>Bank: <strong>Guaranty Trust Bank (GTBank)</strong></div>
+                    <div className="flex items-center justify-between mt-1">
+                      <span>Acct: <strong className="font-mono text-sm tracking-wider">0123456789</strong></span>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyBankAcct('0123456789')}
+                        className="px-2 py-0.5 bg-blue-600 text-white text-[10px] rounded hover:bg-blue-700 flex items-center gap-1 cursor-pointer"
+                      >
+                        <Copy className="w-3 h-3" />
+                        <span>{copiedAcct ? 'Copied' : 'Copy'}</span>
+                      </button>
+                    </div>
+                    <div className="text-[10px] text-blue-800 mt-1">Name: <strong>Hamstore Dining Ltd</strong></div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2 text-left">
+                  <input
+                    type="text"
+                    required
+                    placeholder="Card Number (0000 0000 0000 0000)"
+                    defaultValue="5399 8320 1289 4432"
+                    className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg font-mono"
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="text"
+                      required
+                      placeholder="MM/YY"
+                      defaultValue="08/28"
+                      className="px-3 py-2 text-xs border border-gray-300 rounded-lg font-mono"
+                    />
+                    <input
+                      type="password"
+                      required
+                      placeholder="CVV"
+                      defaultValue="123"
+                      className="px-3 py-2 text-xs border border-gray-300 rounded-lg font-mono"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isPayingPostOrder}
+                className="w-full py-2.5 bg-[#024628] hover:bg-[#035933] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {isPayingPostOrder ? (
+                  <span>Verifying Payment...</span>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 text-[#C8B282]" />
+                    <span>Confirm & Settle {formatNaira(confirmedOrder.grandTotal)}</span>
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+        )}
       </div>
     );
   }
@@ -308,19 +641,20 @@ export const CustomerMenuPortal: React.FC<CustomerMenuPortalProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            {onExitGuestMode && (
-              <button
-                type="button"
-                onClick={onExitGuestMode}
-                className="px-2 py-1 bg-[#1e293b] hover:bg-[#334155] text-[10px] text-[#C8B282] font-semibold rounded border border-[#334155]"
-                title="Exit to Cashier Portal"
-              >
-                Staff Portal
-              </button>
-            )}
+            <span className="flex items-center gap-1.5 px-2.5 py-1 bg-[#1e293b] text-[10px] text-emerald-400 font-bold rounded-full border border-emerald-500/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Self-Service</span>
+            </span>
           </div>
         </div>
       </header>
+
+      {/* Toast Notification */}
+      {toastMsg && (
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-[#0b1221] text-[#C8B282] border border-[#C8B282] px-4 py-2.5 rounded-xl shadow-2xl text-xs font-bold flex items-center gap-2 animate-fadeIn">
+          <span>{toastMsg}</span>
+        </div>
+      )}
 
       {/* Main Container */}
       <main className="max-w-2xl mx-auto px-4 pt-4 space-y-4">
@@ -511,6 +845,23 @@ export const CustomerMenuPortal: React.FC<CustomerMenuPortalProps> = ({
                 </div>
               );
             })
+          )}
+        </div>
+
+        {/* Discrete Footer Info */}
+        <div className="pt-8 pb-12 text-center text-[11px] text-gray-400 space-y-1">
+          <p className="font-semibold text-gray-500">RESTAURANT MANAGEMENT SYSTEM • TABLE SELF-ORDERING</p>
+          <p className="text-[10px] text-gray-400">All prices inclusive of 5% consumption VAT</p>
+          {onExitGuestMode && (
+            <div className="pt-4">
+              <button
+                type="button"
+                onClick={onExitGuestMode}
+                className="text-[9px] text-gray-300 hover:text-gray-500 underline cursor-pointer"
+              >
+                Staff Terminal Exit
+              </button>
+            </div>
           )}
         </div>
       </main>

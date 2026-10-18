@@ -761,9 +761,9 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            onClick={() => onOpenCustomerView ? onOpenCustomerView('Table 01') : window.open('?table=Table%2001', '_blank')}
+            onClick={() => window.open('?table=Table%2001', '_blank')}
             className="px-3.5 py-2 bg-[#2D5A44] hover:bg-[#244736] text-white border border-[#3b7559] text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
-            title="Preview Customer Mobile QR Self-Ordering Portal"
+            title="Preview Customer Mobile QR Self-Ordering Portal (Opens in New Window)"
           >
             <QrCode className="w-3.5 h-3.5 text-[#C8B282]" />
             <span>Customer QR Menu</span>
