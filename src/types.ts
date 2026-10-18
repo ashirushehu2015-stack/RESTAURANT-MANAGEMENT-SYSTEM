@@ -263,7 +263,11 @@ export type UserRole =
   | 'Kitchen Waiter 2'
   | 'Hotel Manager'
   | 'Cashier' 
-  | 'Duty Manager';
+  | 'Duty Manager'
+  | 'Internal Auditor'
+  | 'Accountant'
+  | 'Storekeeper'
+  | 'Waitstaff';
 
 export interface UserProfile {
   id: string;
@@ -278,6 +282,11 @@ export interface UserProfile {
   description: string;
   twoFactorEnabled?: boolean;
   twoFactorSecret?: string;
+  pin?: string;
+  status?: 'Active' | 'On Leave' | 'Suspended';
+  shift?: 'Morning (07:00 - 15:00)' | 'Evening (15:00 - 23:00)' | 'Night (23:00 - 07:00)' | 'Flexible';
+  isOnDuty?: boolean;
+  dateJoined?: string;
 }
 
 export interface HotelInfo {

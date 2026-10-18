@@ -11,8 +11,11 @@ import { AuditTrailModule } from './AuditTrailModule';
 import { TableFloorPlanView } from './TableFloorPlanView';
 import { ReservationsModule } from './ReservationsModule';
 import { FinancialsModule } from './FinancialsModule';
+import { StaffRolesModule } from './StaffRolesModule';
+import { QuickStaffSwitchModal } from './QuickStaffSwitchModal';
+import { INITIAL_STAFF } from '../data/staffData';
 import { INITIAL_TABLES } from '../data/tableData';
-import type { RestaurantTable } from '../types';
+import type { RestaurantTable, UserProfile } from '../types';
 import { formatNaira, formatDateFormatted } from '../utils/formatters';
 import { 
   Utensils, 
@@ -50,6 +53,7 @@ import {
   UserCheck,
   ShieldCheck,
   Settings,
+  KeyRound,
   LogOut
 } from 'lucide-react';
 
@@ -176,6 +180,36 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
     }
   };
 
+  // Active Staff & RBAC Quick-Switch State
+  const [staffList, setStaffList] = useState<UserProfile[]>(() => {
+    try {
+      const saved = localStorage.getItem('fulbe_restaurant_staff');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return INITIAL_STAFF;
+  });
+
+  const [activeStaff, setActiveStaff] = useState<UserProfile>(() => {
+    try {
+      const saved = localStorage.getItem('fulbe_restaurant_active_user');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return INITIAL_STAFF[2]; // Default to Aisha Garba (Senior Cashier)
+  });
+
+  const [isQuickSwitchModalOpen, setIsQuickSwitchModalOpen] = useState(false);
+
+  const handleSwitchStaff = (staff: UserProfile) => {
+    setActiveStaff(staff);
+    try {
+      localStorage.setItem('fulbe_restaurant_active_user', JSON.stringify(staff));
+    } catch (e) {}
+    setSuccessToast(`Terminal operator switched to ${staff.name} (${staff.role})`);
+  };
+
+  const currentCashier = activeStaff?.name || cashierName;
+  const currentRole = activeStaff?.role || userRole;
+
   React.useEffect(() => {
     if (initialTab) {
       setActiveTab(initialTab);
@@ -292,7 +326,7 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
       paymentStatus: 'Pending',
       kitchenStatus: 'Pending',
       createdAt: `${formatDateFormatted(new Date().toISOString().split('T')[0])} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
-      cashierName,
+      cashierName: currentCashier,
       customerName: customerName.trim() || 'Walk-in Guest'
     };
 
@@ -313,8 +347,8 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
     const finalLog: AuditLog = {
       id: `LOG-${Date.now().toString().slice(-5)}`,
       timestamp: finalOrder.createdAt,
-      user: cashierName,
-      role: userRole,
+      user: currentCashier,
+      role: currentRole,
       action: 'SERVICE_ADDED',
       details: `Placed Restaurant Order ${finalOrder.id} (${finalOrder.orderType} - ${finalOrder.tableOrRoom}) Total: ${formatNaira(finalOrder.grandTotal)} via ${payment.paymentMethod}`,
       reference: finalOrder.id
@@ -655,10 +689,18 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
 
         <div className="p-4 mt-auto">
           <div className="bg-[#1a2333] p-3 rounded-xl border border-[#2d3a52] flex items-center justify-between">
-            <div className="overflow-hidden pr-2">
-              <p className="text-xs text-white font-semibold truncate">{cashierName}</p>
-              <p className="text-[10px] text-[#9ba8c0] mt-0.5">{userRole}</p>
-            </div>
+            <button
+              type="button"
+              onClick={() => setIsQuickSwitchModalOpen(true)}
+              className="text-left overflow-hidden pr-2 flex-1 hover:opacity-80 transition-opacity cursor-pointer"
+              title="Click to Switch Operating Staff / Cashier"
+            >
+              <p className="text-xs text-white font-semibold truncate flex items-center gap-1.5">
+                <span>{currentCashier}</span>
+                <KeyRound className="w-3 h-3 text-[#f59e0b]" />
+              </p>
+              <p className="text-[10px] text-[#9ba8c0] mt-0.5">{currentRole}</p>
+            </button>
             {onLogout && (
               <button
                 type="button"
@@ -754,10 +796,19 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
           <span className="text-[10px] text-[#73706B] mt-0.5 block">Ready for Custom Menu Update</span>
         </div>
 
-        <div className="bg-white p-4 border border-[#E5E2DA] shadow-xs">
-          <span className="text-[9px] font-bold uppercase tracking-widest text-[#8C8984] block">Duty Cashier / Waiter</span>
-          <span className="font-serif font-bold text-sm text-[#1A1A1A] truncate block mt-1">{cashierName}</span>
-          <span className="text-[10px] text-[#A3A09A] font-semibold mt-0.5 block">{userRole}</span>
+        <div 
+          onClick={() => setIsQuickSwitchModalOpen(true)}
+          className="bg-white p-4 border border-[#E5E2DA] shadow-xs cursor-pointer hover:border-[#C8B282] transition-colors group"
+          title="Click to Switch Duty Cashier / Operator"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[9px] font-bold uppercase tracking-widest text-[#8C8984] block">Duty Cashier / Waiter</span>
+            <span className="text-[9px] font-bold text-[#8C7642] group-hover:underline flex items-center gap-1">
+              <KeyRound className="w-3 h-3" /> Switch
+            </span>
+          </div>
+          <span className="font-serif font-bold text-sm text-[#1A1A1A] truncate block mt-1">{currentCashier}</span>
+          <span className="text-[10px] text-[#A3A09A] font-semibold mt-0.5 block">{currentRole}</span>
         </div>
       </div>
 
@@ -1703,7 +1754,7 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
             setTableOrRoom(t);
             setActiveTab('pos');
           }}
-          cashierName={cashierName}
+          cashierName={currentCashier}
         />
       )}
 
@@ -1718,7 +1769,7 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
             setActiveTab('pos');
           }}
           onNavigateToFloorPlan={() => setActiveTab('table_plan')}
-          cashierName={cashierName}
+          cashierName={currentCashier}
         />
       )}
 
@@ -1726,8 +1777,8 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
       {activeTab === 'financials' && (
         <FinancialsModule
           orders={orders}
-          cashierName={cashierName}
-          userRole={userRole}
+          cashierName={currentCashier}
+          userRole={currentRole as UserRole}
         />
       )}
 
@@ -1753,7 +1804,15 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
             setActiveTab('reservations');
           }}
           onReprintReceipt={printThermalReceipt}
-          cashierName={cashierName}
+          cashierName={currentCashier}
+        />
+      )}
+
+      {/* TAB: STAFF & ROLES */}
+      {activeTab === 'staff' && (
+        <StaffRolesModule
+          currentCashierName={currentCashier}
+          onSwitchUser={handleSwitchStaff}
         />
       )}
 
@@ -1768,7 +1827,6 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
 
       {/* OTHER TABS UNDER CONSTRUCTION */}
       {[
-        'staff',
         'settings',
         'analytics'
       ].includes(activeTab) && (
@@ -1788,6 +1846,15 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
       )}
       
       </div> {/* End Main Content Area */}
+
+      {/* QUICK STAFF SWITCH PIN PAD MODAL */}
+      <QuickStaffSwitchModal
+        isOpen={isQuickSwitchModalOpen}
+        onClose={() => setIsQuickSwitchModalOpen(false)}
+        staffList={staffList}
+        currentStaffId={activeStaff?.id}
+        onSelectStaff={handleSwitchStaff}
+      />
     </div>
   );
 };
