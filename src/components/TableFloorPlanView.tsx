@@ -12,11 +12,13 @@ import {
   Sparkles,
   Building2,
   Armchair,
-  Info
+  Info,
+  QrCode
 } from 'lucide-react';
 import type { RestaurantTable, TableFloor, TableStatus, TableShape } from '../types';
 import { INITIAL_TABLES, GROUND_FLOOR_SEATS_TARGET, FIRST_FLOOR_SEATS_TARGET } from '../data/tableData';
 import { formatNaira } from '../utils/formatters';
+import { TableQRCodeModal } from './TableQRCodeModal';
 
 interface TableFloorPlanViewProps {
   orders?: any[];
@@ -24,6 +26,7 @@ interface TableFloorPlanViewProps {
   cashierName?: string;
   tables?: RestaurantTable[];
   onSaveTables?: (tables: RestaurantTable[]) => void;
+  onOpenCustomerView?: (tableNumber: string) => void;
 }
 
 export const TableFloorPlanView: React.FC<TableFloorPlanViewProps> = ({
@@ -31,7 +34,8 @@ export const TableFloorPlanView: React.FC<TableFloorPlanViewProps> = ({
   onOpenInPos,
   cashierName = 'Prototype Cashier',
   tables: propTables,
-  onSaveTables
+  onSaveTables,
+  onOpenCustomerView
 }) => {
   // Load tables from localStorage or default to INITIAL_TABLES
   const [internalTables, setInternalTables] = useState<RestaurantTable[]>(() => {
@@ -80,6 +84,10 @@ export const TableFloorPlanView: React.FC<TableFloorPlanViewProps> = ({
   const [newTableSeats, setNewTableSeats] = useState<number>(4);
   const [newTableShape, setNewTableShape] = useState<TableShape>('rectangular');
   const [newTableNotes, setNewTableNotes] = useState('');
+
+  // Table QR Code Modal State
+  const [isQRModalOpen, setIsQRModalOpen] = useState(false);
+  const [qrModalTable, setQrModalTable] = useState<RestaurantTable | null>(null);
 
   // Compute live floor metrics
   const groundFloorTables = tables.filter(t => t.floor === 'Ground Floor');
@@ -266,6 +274,15 @@ export const TableFloorPlanView: React.FC<TableFloorPlanViewProps> = ({
         </div>
 
         <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => { setQrModalTable(null); setIsQRModalOpen(true); }}
+            className="flex items-center gap-1.5 px-3 py-2 bg-[#C8B282] hover:bg-[#b59e6d] text-[#0b1221] text-xs font-black uppercase tracking-wider rounded-xs cursor-pointer shadow-sm transition-colors"
+            title="Generate and Print Table QR Codes & Acrylic Stands"
+          >
+            <QrCode className="w-4 h-4" />
+            <span>Table QR Codes</span>
+          </button>
           <button
             type="button"
             onClick={handleResetDefaults}
@@ -627,6 +644,16 @@ export const TableFloorPlanView: React.FC<TableFloorPlanViewProps> = ({
                   </button>
                 )}
 
+                {/* View QR Code Button */}
+                <button
+                  type="button"
+                  onClick={() => { setQrModalTable(table); setIsQRModalOpen(true); }}
+                  title="View Table QR Code & Tent Card"
+                  className="p-2 border border-[#E5E2DA] bg-[#FAF8F5] text-[#73706B] hover:text-[#0b1221] hover:bg-[#F0EDE6] transition-colors rounded-xs flex items-center justify-center flex-shrink-0 cursor-pointer"
+                >
+                  <QrCode className="w-3.5 h-3.5" />
+                </button>
+
                 {/* Quick Edit Status */}
                 <button
                   type="button"
@@ -924,6 +951,16 @@ export const TableFloorPlanView: React.FC<TableFloorPlanViewProps> = ({
             </div>
           </form>
         </div>
+      )}
+
+      {/* MODAL 4: TABLE QR CODE & PRINTABLE TENT CARDS */}
+      {isQRModalOpen && (
+        <TableQRCodeModal
+          tables={tables}
+          selectedTable={qrModalTable}
+          onClose={() => setIsQRModalOpen(false)}
+          onOpenCustomerView={onOpenCustomerView}
+        />
       )}
 
     </div>

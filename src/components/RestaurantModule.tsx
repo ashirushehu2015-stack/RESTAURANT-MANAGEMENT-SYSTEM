@@ -55,7 +55,8 @@ import {
   ShieldCheck,
   Settings,
   KeyRound,
-  LogOut
+  LogOut,
+  QrCode
 } from 'lucide-react';
 
 export type RestaurantTab = 
@@ -131,6 +132,7 @@ interface RestaurantModuleProps {
   userRole: UserRole;
   initialTab?: RestaurantTab;
   onLogout?: () => void;
+  onOpenCustomerView?: (tableNumber: string) => void;
 }
 
 export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
@@ -144,7 +146,8 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
   cashierName,
   userRole,
   initialTab,
-  onLogout
+  onLogout,
+  onOpenCustomerView
 }) => {
   // Navigation tabs inside Restaurant
   const [activeTab, setActiveTab] = useState<RestaurantTab>(initialTab || 'dashboard');
@@ -756,6 +759,16 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onOpenCustomerView ? onOpenCustomerView('Table 01') : window.open('?table=Table%2001', '_blank')}
+            className="px-3.5 py-2 bg-[#2D5A44] hover:bg-[#244736] text-white border border-[#3b7559] text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
+            title="Preview Customer Mobile QR Self-Ordering Portal"
+          >
+            <QrCode className="w-3.5 h-3.5 text-[#C8B282]" />
+            <span>Customer QR Menu</span>
+          </button>
+
           <button
             onClick={() => setIsImportMenuModalOpen(true)}
             className="px-3.5 py-2 bg-[#262626] hover:bg-[#333333] text-[#C8B282] border border-[#C8B282]/40 text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5"
@@ -1756,6 +1769,7 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
             setActiveTab('pos');
           }}
           cashierName={currentCashier}
+          onOpenCustomerView={onOpenCustomerView}
         />
       )}
 

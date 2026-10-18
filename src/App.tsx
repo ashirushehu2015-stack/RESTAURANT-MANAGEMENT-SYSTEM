@@ -1,5 +1,6 @@
 import { RestaurantModule } from './components/RestaurantModule';
 import { LoginPage } from './components/LoginPage';
+import { CustomerMenuPortal } from './components/CustomerMenuPortal';
 import { INITIAL_MENU_ITEMS, INITIAL_RESTAURANT_ORDERS } from './data/restaurantData';
 import type { RestaurantMenuItem, RestaurantOrder, AuditLog } from './types';
 import { useState, useEffect } from 'react';
@@ -91,6 +92,24 @@ function App() {
   const [menuItems, setMenuItems] = useState<RestaurantMenuItem[]>(loadInitialMenuItems);
   const [orders, setOrders] = useState<RestaurantOrder[]>(loadInitialOrders);
 
+  // Check URL query parameters for QR Table scan (e.g. ?table=Table%2008 or ?mode=guest)
+  const [isGuestMode, setIsGuestMode] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const search = window.location.search.toLowerCase();
+      const hash = window.location.hash.toLowerCase();
+      return search.includes('table=') || search.includes('mode=guest') || hash.includes('menu');
+    }
+    return false;
+  });
+
+  const [guestTableParam, setGuestTableParam] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('table') || 'Table 08 (Garden)';
+    }
+    return 'Table 08 (Garden)';
+  });
+
   // Synchronize on state change as secondary guarantee
   useEffect(() => {
     persistMenuItems(menuItems);
@@ -166,6 +185,23 @@ function App() {
     setIsLoggedIn(false);
   };
 
+  // If customer scans QR code, show Customer Menu Portal immediately (no login required)
+  if (isGuestMode) {
+    return (
+      <CustomerMenuPortal
+        menuItems={menuItems}
+        onPlaceOrder={handlePlaceOrder}
+        initialTable={guestTableParam}
+        onExitGuestMode={() => {
+          setIsGuestMode(false);
+          try {
+            window.history.replaceState({}, document.title, window.location.pathname);
+          } catch (e) {}
+        }}
+      />
+    );
+  }
+
   if (!isLoggedIn) {
     return <LoginPage onLogin={handleLogin} />;
   }
@@ -183,6 +219,10 @@ function App() {
         cashierName="Prototype Cashier"
         userRole="super_admin"
         onLogout={handleLogout}
+        onOpenCustomerView={(tableNum) => {
+          setGuestTableParam(tableNum);
+          setIsGuestMode(true);
+        }}
       />
     </div>
   );
