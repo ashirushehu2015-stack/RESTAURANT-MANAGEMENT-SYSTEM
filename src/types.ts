@@ -250,3 +250,25 @@ export interface HotelInfo {
   phone: string;
   registrationBox: string;
 }
+
+
+export type TableFloor = 'Ground Floor' | 'First Floor';
+export type TableStatus = 'Available' | 'Occupied' | 'Reserved' | 'Cleaning';
+export type TableShape = 'round' | 'rectangular' | 'booth';
+
+export interface RestaurantTable {
+  id: string;
+  tableNumber: string;
+  floor: TableFloor;
+  seats: number;
+  shape: TableShape;
+  status: TableStatus;
+  currentGuestName?: string;
+  guestCount?: number;
+  assignedServer?: string;
+  activeOrderId?: string;
+  orderTotal?: number;
+  seatedAt?: string;
+  reservationTime?: string;
+  notes?: string;
+}

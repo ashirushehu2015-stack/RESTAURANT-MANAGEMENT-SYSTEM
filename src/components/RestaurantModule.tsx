@@ -4,6 +4,7 @@ import { PaymentFormModal } from './PaymentFormModal';
 import { Dashboard } from './Dashboard';
 import { InventoryModule } from './InventoryModule';
 import { SuppliersModule } from './SuppliersModule';
+import { TableFloorPlanView } from './TableFloorPlanView';
 import { formatNaira, formatDateFormatted } from '../utils/formatters';
 import { 
   Utensils, 
@@ -1674,9 +1675,20 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
         <SuppliersModule />
       )}
 
+      {/* TAB: TABLE & FLOOR PLAN */}
+      {activeTab === 'table_plan' && (
+        <TableFloorPlanView
+          orders={orders}
+          onOpenInPos={(t) => {
+            setTableOrRoom(t);
+            setActiveTab('pos');
+          }}
+          cashierName={cashierName}
+        />
+      )}
+
       {/* OTHER TABS UNDER CONSTRUCTION */}
       {[
-        'table_plan',
         'reservations',
         'expenses',
         'financials',
