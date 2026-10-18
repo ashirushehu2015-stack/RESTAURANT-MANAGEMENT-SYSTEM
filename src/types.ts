@@ -75,6 +75,35 @@ export interface PurchaseOrder {
   status?: string;            // optional / backward compatibility
 }
 
+export type ExpenseCategory = 
+  | 'Power & Generator Fuel'
+  | 'Cooking Gas (LPG)'
+  | 'Kitchen Petty & Sundry'
+  | 'Equipment Repairs & Maintenance'
+  | 'Packaging & Consumables'
+  | 'Staff Welfare & Casuals'
+  | 'Cleaning & Sanitation'
+  | 'Utilities & Electricity'
+  | 'Administrative & POS Sundry'
+  | 'Other Operational Expenses';
+
+export type ExpensePaymentMethod = 'Cash (Petty Cash)' | 'Bank Transfer' | 'POS Machine';
+
+export interface ExpenseRecord {
+  id: string; // e.g. EXP-2026-001
+  date: string; // YYYY-MM-DD
+  time: string; // HH:mm
+  category: ExpenseCategory;
+  title: string;
+  amount: number;
+  paymentMethod: ExpensePaymentMethod;
+  paidTo: string; // Beneficiary
+  recordedBy: string; // Cashier / Manager
+  receiptRef?: string; // Receipt / Ref No.
+  status: 'Approved' | 'Pending Approval' | 'Rejected';
+  notes?: string;
+}
+
 export interface RestaurantOrder {
   id: string; // e.g. ORD-2026-0041
   tableOrRoom: string; // e.g. "Table 04" or "Room 108"

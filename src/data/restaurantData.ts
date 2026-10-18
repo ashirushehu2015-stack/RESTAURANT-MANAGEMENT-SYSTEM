@@ -1,4 +1,4 @@
-import type { RestaurantMenuItem, RestaurantOrder, InventoryItem, Supplier, PurchaseOrder } from '../types';
+import type { RestaurantMenuItem, RestaurantOrder, InventoryItem, Supplier, PurchaseOrder, ExpenseRecord } from '../types';
 
 export const INITIAL_MENU_ITEMS: RestaurantMenuItem[] = [
   // --- FOOD MENU ---
@@ -705,5 +705,122 @@ export const INITIAL_PURCHASE_ORDERS: PurchaseOrder[] = [
     deliveryStatus: "Pending",
     status: "Pending",
     description: "60kg Catfish & Croaker @ ₦3,500/kg"
+  }
+];
+
+export const INITIAL_PETTY_CASH_BALANCE = 75000;
+
+export const INITIAL_EXPENSES: ExpenseRecord[] = [
+  {
+    id: "EXP-2026-001",
+    date: "2026-08-18",
+    time: "10:30",
+    category: "Power & Generator Fuel",
+    title: "100 Litres Diesel for Standby Generator",
+    amount: 135000,
+    paymentMethod: "Bank Transfer",
+    paidTo: "TotalEnergies Filling Station",
+    recordedBy: "General Manager",
+    receiptRef: "TE-DSL-9041",
+    status: "Approved",
+    notes: "Main power supply for restaurant & cold room"
+  },
+  {
+    id: "EXP-2026-002",
+    date: "2026-08-18",
+    time: "11:45",
+    category: "Cooking Gas (LPG)",
+    title: "Refill 2x 50kg LPG Cooking Gas Cylinders",
+    amount: 84000,
+    paymentMethod: "Bank Transfer",
+    paidTo: "Gasland Gas Depot",
+    recordedBy: "Head Chef",
+    receiptRef: "GL-REC-582",
+    status: "Approved",
+    notes: "Kitchen main stove battery gas cylinders"
+  },
+  {
+    id: "EXP-2026-003",
+    date: "2026-08-18",
+    time: "13:15",
+    category: "Kitchen Petty & Sundry",
+    title: "Emergency Lemons, Fresh Mint & Ginger",
+    amount: 7500,
+    paymentMethod: "Cash (Petty Cash)",
+    paidTo: "Central Market Runner",
+    recordedBy: "Prototype Cashier",
+    receiptRef: "MKT-RUN-01",
+    status: "Approved",
+    notes: "Cocktails and fresh kitchen garnish restock"
+  },
+  {
+    id: "EXP-2026-004",
+    date: "2026-08-17",
+    time: "15:20",
+    category: "Equipment Repairs & Maintenance",
+    title: "Deep Freezer Compressor Servicing & R134a Gas",
+    amount: 35000,
+    paymentMethod: "Bank Transfer",
+    paidTo: "Danladi Cooling Tech",
+    recordedBy: "Head Chef",
+    receiptRef: "DCT-INV-118",
+    status: "Approved",
+    notes: "Repaired secondary meat deep freezer"
+  },
+  {
+    id: "EXP-2026-005",
+    date: "2026-08-17",
+    time: "16:40",
+    category: "Packaging & Consumables",
+    title: "5 Packs Biodegradable Takeaway Packs & Poly Bags",
+    amount: 18500,
+    paymentMethod: "Cash (Petty Cash)",
+    paidTo: "City Packaging Ventures",
+    recordedBy: "Prototype Cashier",
+    receiptRef: "CPV-8821",
+    status: "Approved",
+    notes: "Deliveries and takeaway food service packaging"
+  },
+  {
+    id: "EXP-2026-006",
+    date: "2026-08-17",
+    time: "22:30",
+    category: "Staff Welfare & Casuals",
+    title: "Night Shift Crew Closing Taxi / Transport",
+    amount: 6000,
+    paymentMethod: "Cash (Petty Cash)",
+    paidTo: "Closing Floor & Kitchen Staff",
+    recordedBy: "Duty Manager",
+    receiptRef: "TRN-0817",
+    status: "Approved",
+    notes: "Late night safe transport allowance"
+  },
+  {
+    id: "EXP-2026-007",
+    date: "2026-08-16",
+    time: "09:10",
+    category: "Administrative & POS Sundry",
+    title: "10 Rolls 80mm Thermal Receipt Paper",
+    amount: 9000,
+    paymentMethod: "Cash (Petty Cash)",
+    paidTo: "Stationery Mart",
+    recordedBy: "Prototype Cashier",
+    receiptRef: "SM-4412",
+    status: "Approved",
+    notes: "POS printing rolls for cashier counter"
+  },
+  {
+    id: "EXP-2026-008",
+    date: "2026-08-18",
+    time: "14:00",
+    category: "Cleaning & Sanitation",
+    title: "Heavy-Duty Kitchen Degreaser & Floor Cleaners",
+    amount: 14000,
+    paymentMethod: "Bank Transfer",
+    paidTo: "CleanPro Chemical Hub",
+    recordedBy: "Head Chef",
+    receiptRef: "CP-7789",
+    status: "Pending Approval",
+    notes: "Weekly kitchen deep sanitation chemical restock"
   }
 ];
