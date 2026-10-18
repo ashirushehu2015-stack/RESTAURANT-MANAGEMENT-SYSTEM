@@ -7,6 +7,7 @@ import { SuppliersModule } from './SuppliersModule';
 import { ExpensesModule } from './ExpensesModule';
 import { OrderHistoryModule } from './OrderHistoryModule';
 import { CustomerCRMModule } from './CustomerCRMModule';
+import { AuditTrailModule } from './AuditTrailModule';
 import { TableFloorPlanView } from './TableFloorPlanView';
 import { ReservationsModule } from './ReservationsModule';
 import { FinancialsModule } from './FinancialsModule';
@@ -1756,10 +1757,18 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
         />
       )}
 
+      {/* TAB: AUDIT TRAIL */}
+      {activeTab === 'audit_trail' && (
+        <AuditTrailModule
+          orders={orders}
+          onReprintReceipt={printThermalReceipt}
+          cashierName={cashierName}
+        />
+      )}
+
       {/* OTHER TABS UNDER CONSTRUCTION */}
       {[
         'staff',
-        'audit_trail',
         'settings',
         'analytics'
       ].includes(activeTab) && (

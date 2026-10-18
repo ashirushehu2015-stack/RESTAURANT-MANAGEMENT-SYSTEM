@@ -371,3 +371,32 @@ export interface MarketingCampaign {
   reachCount?: number;
   conversionRate?: string;
 }
+
+export type AuditCategory = 
+  | 'Financial & POS' 
+  | 'Exceptions & Voids' 
+  | 'Inventory & Procurement' 
+  | 'Expenses & Floats' 
+  | 'Kitchen & Operations' 
+  | 'Security & Access';
+
+export type AuditSeverity = 'INFO' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+export interface AuditRecord {
+  id: string; // e.g. "AUD-2026-0045"
+  timestamp: string; // e.g. "2026-10-18 11:30:15 AM"
+  date: string; // "2026-10-18"
+  time: string; // "11:30 AM"
+  user: string; // "Prototype Cashier"
+  role: string; // "Cashier", "Head Chef", "Restaurant Manager", "Super Admin"
+  action: string; // "PAYMENT_RECORDED", "ORDER_VOIDED", etc.
+  category: AuditCategory;
+  severity: AuditSeverity;
+  details: string;
+  reference: string; // "ORD-2026-0102", "PO-2026-004", etc.
+  terminal: string; // "Terminal POS-01 (Main Hall)"
+  ipAddress?: string; // "192.168.1.104"
+  status: 'SUCCESS' | 'WARNING' | 'FAILED';
+  integrityHash?: string;
+}
+
