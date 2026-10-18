@@ -14,7 +14,7 @@ export interface CreatePaymentParams {
   roomNumber?: string;
   roomCategory?: RoomCategory;
   callbackUrl?: string;
-  gateway?: 'Paystack' | 'Flutterwave' | 'POS_Terminal' | 'Direct_Cash';
+  gateway?: 'Paystack' | 'Flutterwave' | 'POS_Terminal' | 'Direct_Cash' | 'Moniepoint' | 'Opay';
 }
 
 export interface PaymentResponse {

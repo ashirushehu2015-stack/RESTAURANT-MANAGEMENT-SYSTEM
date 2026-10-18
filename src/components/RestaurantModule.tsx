@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { RestaurantMenuItem, RestaurantOrder, OrderItem, RestaurantCategory, PaymentMethod, AuditLog, UserRole, Invoice, PaymentRecord } from '../types';
 import { PaymentFormModal } from './PaymentFormModal';
+import { Dashboard } from './Dashboard';
 import { formatNaira, formatDateFormatted } from '../utils/formatters';
 import { 
   Utensils, 
@@ -25,8 +26,82 @@ import {
   AlertCircle,
   FileText,
   Upload,
-  Edit2
+  Edit2,
+  LayoutDashboard,
+  LayoutGrid,
+  Calendar,
+  Package,
+  Truck,
+  Receipt,
+  TrendingUp,
+  History,
+  Users,
+  UserCheck,
+  ShieldCheck,
+  Settings,
+  LogOut
 } from 'lucide-react';
+
+export type RestaurantTab = 
+  | 'dashboard'
+  | 'pos'
+  | 'kds'
+  | 'table_plan'
+  | 'reservations'
+  | 'menu_manager'
+  | 'inventory'
+  | 'suppliers'
+  | 'expenses'
+  | 'financials'
+  | 'order_history'
+  | 'customer_crm'
+  | 'staff'
+  | 'audit_trail'
+  | 'settings'
+  | 'analytics';
+
+interface SidebarItemProps {
+  id: string;
+  icon: React.ReactNode;
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  badge?: string;
+  badgeColor?: string;
+}
+
+const SidebarItem: React.FC<SidebarItemProps> = ({
+  icon,
+  label,
+  active,
+  onClick,
+  badge,
+  badgeColor
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-[13px] font-semibold transition-all duration-200 cursor-pointer ${
+      active
+        ? 'bg-[#f59e0b] text-[#0b1221] shadow-sm font-bold'
+        : 'text-[#9ba8c0] hover:bg-[#1a2333] hover:text-[#d1d5db]'
+    }`}
+  >
+    <div className="flex items-center gap-3">
+      <div className={active ? 'text-[#0b1221]' : 'text-[#7e8da6]'}>{icon}</div>
+      <span>{label}</span>
+    </div>
+    {badge && (
+      <span
+        className={`px-2 py-0.5 rounded-full text-[10px] font-bold text-white ${
+          badgeColor || 'bg-orange-500'
+        }`}
+      >
+        {badge}
+      </span>
+    )}
+  </button>
+);
 
 interface RestaurantModuleProps {
   menuItems: RestaurantMenuItem[];
@@ -38,7 +113,8 @@ interface RestaurantModuleProps {
   onUpdateOrderStatus: (orderId: string, status: 'Pending' | 'Preparing' | 'Ready' | 'Served', log: AuditLog) => void;
   cashierName: string;
   userRole: UserRole;
-  initialTab?: 'dashboard' | 'pos' | 'kds' | 'menu_manager' | 'analytics';
+  initialTab?: RestaurantTab;
+  onLogout?: () => void;
 }
 
 export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
@@ -51,10 +127,11 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
   onUpdateOrderStatus,
   cashierName,
   userRole,
-  initialTab
+  initialTab,
+  onLogout
 }) => {
   // Navigation tabs inside Restaurant
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'pos' | 'kds' | 'menu_manager' | 'analytics'>(initialTab || 'dashboard');
+  const [activeTab, setActiveTab] = useState<RestaurantTab>(initialTab || 'dashboard');
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [pendingCheckoutOrder, setPendingCheckoutOrder] = useState<RestaurantOrder | null>(null);
 
@@ -83,13 +160,28 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
   const [rawMenuText, setRawMenuText] = useState<string>('');
 
   // New Menu Item Form State
+  const [editingMenuItem, setEditingMenuItem] = useState<RestaurantMenuItem | null>(null);
   const [newDishName, setNewDishName] = useState('');
   const [newDishCategory, setNewDishCategory] = useState<RestaurantCategory>('FOOD MENU');
   const [newDishPrice, setNewDishPrice] = useState<number>(3500);
   const [newDishDesc, setNewDishDesc] = useState('');
   const [newDishPrepTime, setNewDishPrepTime] = useState<number>(15);
+  const [newDishImageUrl, setNewDishImageUrl] = useState<string>('');
   const [newDishSpicy, setNewDishSpicy] = useState<boolean>(false);
   const [newDishChefSpecial, setNewDishChefSpecial] = useState<boolean>(false);
+  const [successToast, setSuccessToast] = useState<string | null>(null);
+
+  // Dynamic Categories from available menu items
+  const allCategories = [
+    'All',
+    ...Array.from(new Set([
+      'FOOD MENU',
+      'SNACKS',
+      'PROTEIN',
+      'DRINKS',
+      ...menuItems.map((item) => item.category).filter(Boolean)
+    ]))
+  ];
 
   // Filtered Menu Items
   const filteredMenu = menuItems.filter((item) => {
@@ -200,25 +292,52 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
     e.preventDefault();
     if (!newDishName.trim()) return;
 
-    const item: RestaurantMenuItem = {
-      id: `menu-custom-${Date.now().toString().slice(-6)}`,
-      name: newDishName.trim(),
-      category: newDishCategory,
-      price: Number(newDishPrice) || 1000,
-      description: newDishDesc.trim() || 'Delicious house delicacy prepared fresh on order.',
-      available: true,
-      prepTimeMinutes: Number(newDishPrepTime) || 15,
-      isSpicy: newDishSpicy,
-      isChefSpecial: newDishChefSpecial
-    };
+    if (editingMenuItem) {
+      const updatedItem: RestaurantMenuItem = {
+        ...editingMenuItem,
+        name: newDishName.trim(),
+        category: newDishCategory,
+        price: Number(newDishPrice) || 1000,
+        description: newDishDesc.trim() || 'Delicious house delicacy prepared fresh on order.',
+        imageUrl: newDishImageUrl.trim() || undefined,
+        prepTimeMinutes: Number(newDishPrepTime) || 15,
+        isSpicy: newDishSpicy,
+        isChefSpecial: newDishChefSpecial
+      };
+      onUpdateMenuItem(updatedItem);
+      setSuccessToast(`"${updatedItem.name}" updated successfully!`);
+    } else {
+      const item: RestaurantMenuItem = {
+        id: `menu-custom-${Date.now().toString().slice(-6)}`,
+        name: newDishName.trim(),
+        category: newDishCategory,
+        price: Number(newDishPrice) || 1000,
+        description: newDishDesc.trim() || 'Delicious house delicacy prepared fresh on order.',
+        imageUrl: newDishImageUrl.trim() || undefined,
+        available: true,
+        prepTimeMinutes: Number(newDishPrepTime) || 15,
+        isSpicy: newDishSpicy,
+        isChefSpecial: newDishChefSpecial
+      };
+      onAddMenuItem(item);
+      setSuccessToast(`"${item.name}" added to menu!`);
+      setSelectedCategory(newDishCategory);
+      setSearchQuery('');
+    }
 
-    onAddMenuItem(item);
     setIsNewMenuModalOpen(false);
+    setEditingMenuItem(null);
 
     // Reset Form
     setNewDishName('');
     setNewDishDesc('');
     setNewDishPrice(3500);
+    setNewDishPrepTime(15);
+    setNewDishImageUrl('');
+    setNewDishSpicy(false);
+    setNewDishChefSpecial(false);
+
+    setTimeout(() => setSuccessToast(null), 4000);
   };
 
   const handleImportMenu = () => {
@@ -353,75 +472,184 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
     <div className="flex flex-row h-screen w-full bg-[#FDFCF9] overflow-hidden font-sans">
       
       {/* Left Sidebar */}
-      <div className="w-64 bg-[#024628] text-white flex-shrink-0 flex flex-col h-full border-r border-[#01351e] overflow-y-auto">
-        <div className="p-6 pb-8">
-          <h2 className="text-2xl font-bold font-serif tracking-tight leading-tight mb-1">
-            RMS Portal
-          </h2>
-          <p className="text-[#a5ccb8] text-[10px] uppercase tracking-wider font-semibold">
-            Restaurant Management System
-          </p>
-        </div>
-
-        <nav className="flex-1 px-4 space-y-2">
-          <button
-            onClick={() => setActiveTab('dashboard')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded text-sm font-medium transition-colors ${
-              activeTab === 'dashboard' ? 'bg-[#03331d] text-white border border-[#166c43]' : 'text-[#a5ccb8] hover:bg-[#03331d] hover:text-white'
-            }`}
-          >
-            <Building2 className="w-4 h-4" /> Dashboard
-          </button>
-          <button
-            onClick={() => setActiveTab('pos')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded text-sm font-medium transition-colors ${
-              activeTab === 'pos' ? 'bg-[#03331d] text-white border border-[#166c43]' : 'text-[#a5ccb8] hover:bg-[#03331d] hover:text-white'
-            }`}
-          >
-            <ShoppingBag className="w-4 h-4" /> Point of Sale (POS)
-          </button>
-          <button
-            onClick={() => setActiveTab('kds')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded text-sm font-medium transition-colors ${
-              activeTab === 'kds' ? 'bg-[#03331d] text-white border border-[#166c43]' : 'text-[#a5ccb8] hover:bg-[#03331d] hover:text-white'
-            }`}
-          >
-            <div className="relative">
-              <ChefHat className="w-4 h-4" />
-              {activeKitchenCount > 0 && (
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500 absolute -right-1 -top-1" />
-              )}
+      <div className="w-[280px] bg-[#0b1221] text-white flex-shrink-0 flex flex-col h-full border-r border-[#1a2333] overflow-y-auto custom-scrollbar">
+        <nav className="flex-1 px-4 py-6 space-y-6">
+          <div>
+            <h3 className="px-3 mb-2 text-[10px] font-bold text-[#5e7090] uppercase tracking-wider">OPERATIONS</h3>
+            <div className="space-y-1">
+              <SidebarItem
+                id="dashboard"
+                icon={<LayoutDashboard className="w-[18px] h-[18px]" />}
+                label="Dashboard"
+                active={activeTab === 'dashboard'}
+                onClick={() => setActiveTab('dashboard')}
+              />
+              <SidebarItem
+                id="pos"
+                icon={<ShoppingBag className="w-[18px] h-[18px]" />}
+                label="Point of Sale (POS)"
+                active={activeTab === 'pos'}
+                onClick={() => setActiveTab('pos')}
+                badge="3"
+                badgeColor="bg-orange-500"
+              />
+              <SidebarItem
+                id="kds"
+                icon={<ChefHat className="w-[18px] h-[18px]" />}
+                label="Kitchen Display (KDS)"
+                active={activeTab === 'kds'}
+                onClick={() => setActiveTab('kds')}
+                badge={activeKitchenCount > 0 ? String(activeKitchenCount) : undefined}
+                badgeColor="bg-pink-500"
+              />
+              <SidebarItem
+                id="table_plan"
+                icon={<LayoutGrid className="w-[18px] h-[18px]" />}
+                label="Table & Floor Plan"
+                active={activeTab === 'table_plan'}
+                onClick={() => setActiveTab('table_plan')}
+              />
+              <SidebarItem
+                id="reservations"
+                icon={<Calendar className="w-[18px] h-[18px]" />}
+                label="Reservations"
+                active={activeTab === 'reservations'}
+                onClick={() => setActiveTab('reservations')}
+                badge="2"
+                badgeColor="bg-indigo-500"
+              />
             </div>
-            Kitchen Display
-          </button>
-          <button
-            onClick={() => setActiveTab('menu_manager')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded text-sm font-medium transition-colors ${
-              activeTab === 'menu_manager' ? 'bg-[#03331d] text-white border border-[#166c43]' : 'text-[#a5ccb8] hover:bg-[#03331d] hover:text-white'
-            }`}
-          >
-            <FileText className="w-4 h-4" /> Menu Manager
-          </button>
-          <button
-            onClick={() => setActiveTab('analytics')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded text-sm font-medium transition-colors ${
-              activeTab === 'analytics' ? 'bg-[#03331d] text-white border border-[#166c43]' : 'text-[#a5ccb8] hover:bg-[#03331d] hover:text-white'
-            }`}
-          >
-            <FileSpreadsheet className="w-4 h-4" /> Analytics & Reports
-          </button>
+          </div>
+
+          <div>
+            <h3 className="px-3 mb-2 text-[10px] font-bold text-[#5e7090] uppercase tracking-wider">CATALOG & INVENTORY</h3>
+            <div className="space-y-1">
+              <SidebarItem
+                id="menu_manager"
+                icon={<UtensilsCrossed className="w-[18px] h-[18px]" />}
+                label="Menu & Recipes"
+                active={activeTab === 'menu_manager'}
+                onClick={() => setActiveTab('menu_manager')}
+              />
+              <SidebarItem
+                id="inventory"
+                icon={<Package className="w-[18px] h-[18px]" />}
+                label="Inventory & Stock"
+                active={activeTab === 'inventory'}
+                onClick={() => setActiveTab('inventory')}
+                badge="3"
+                badgeColor="bg-orange-500"
+              />
+              <SidebarItem
+                id="suppliers"
+                icon={<Truck className="w-[18px] h-[18px]" />}
+                label="Suppliers & Purchases"
+                active={activeTab === 'suppliers'}
+                onClick={() => setActiveTab('suppliers')}
+              />
+            </div>
+          </div>
+
+          <div>
+            <h3 className="px-3 mb-2 text-[10px] font-bold text-[#5e7090] uppercase tracking-wider">FINANCE & CUSTOMERS</h3>
+            <div className="space-y-1">
+              <SidebarItem
+                id="expenses"
+                icon={<Receipt className="w-[18px] h-[18px]" />}
+                label="Expenses"
+                active={activeTab === 'expenses'}
+                onClick={() => setActiveTab('expenses')}
+              />
+              <SidebarItem
+                id="financials"
+                icon={<TrendingUp className="w-[18px] h-[18px]" />}
+                label="Financials & P&L"
+                active={activeTab === 'financials'}
+                onClick={() => setActiveTab('financials')}
+              />
+              <SidebarItem
+                id="order_history"
+                icon={<History className="w-[18px] h-[18px]" />}
+                label="Order History"
+                active={activeTab === 'order_history'}
+                onClick={() => setActiveTab('order_history')}
+              />
+              <SidebarItem
+                id="customer_crm"
+                icon={<Users className="w-[18px] h-[18px]" />}
+                label="Customer CRM"
+                active={activeTab === 'customer_crm'}
+                onClick={() => setActiveTab('customer_crm')}
+              />
+            </div>
+          </div>
+
+          <div>
+            <h3 className="px-3 mb-2 text-[10px] font-bold text-[#5e7090] uppercase tracking-wider">ADMINISTRATION</h3>
+            <div className="space-y-1">
+              <SidebarItem
+                id="staff"
+                icon={<UserCheck className="w-[18px] h-[18px]" />}
+                label="Staff & Roles"
+                active={activeTab === 'staff'}
+                onClick={() => setActiveTab('staff')}
+              />
+              <SidebarItem
+                id="audit_trail"
+                icon={<ShieldCheck className="w-[18px] h-[18px]" />}
+                label="Audit Trail"
+                active={activeTab === 'audit_trail'}
+                onClick={() => setActiveTab('audit_trail')}
+              />
+              <SidebarItem
+                id="settings"
+                icon={<Settings className="w-[18px] h-[18px]" />}
+                label="System Settings"
+                active={activeTab === 'settings'}
+                onClick={() => setActiveTab('settings')}
+              />
+            </div>
+          </div>
         </nav>
 
         <div className="p-4 mt-auto">
-          <div className="bg-[#03331d] p-3 rounded border border-[#166c43]">
-            <p className="text-xs text-white font-semibold truncate">{cashierName}</p>
-            <p className="text-[10px] text-[#a5ccb8] mt-0.5">{userRole}</p>
+          <div className="bg-[#1a2333] p-3 rounded-xl border border-[#2d3a52] flex items-center justify-between">
+            <div className="overflow-hidden pr-2">
+              <p className="text-xs text-white font-semibold truncate">{cashierName}</p>
+              <p className="text-[10px] text-[#9ba8c0] mt-0.5">{userRole}</p>
+            </div>
+            {onLogout && (
+              <button
+                type="button"
+                onClick={onLogout}
+                title="Log Out"
+                className="p-1.5 rounded-lg text-[#9ba8c0] hover:text-white hover:bg-[#2d3a52] transition-colors cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
       </div>
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-full overflow-y-auto bg-[#FDFCF9] p-6 space-y-6 pb-12">
+        {/* Success Toast */}
+        {successToast && (
+          <div className="bg-[#024628] text-white px-4 py-3 rounded text-xs font-semibold flex items-center justify-between shadow-md border border-[#166c43]">
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-[#8cd6b0]" />
+              <span>{successToast}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSuccessToast(null)}
+              className="text-white/80 hover:text-white font-bold ml-4 text-sm"
+            >
+              ✕
+            </button>
+          </div>
+        )}
       {/* Role Domain Access Badge */}
       <div className={`p-2.5 px-4 text-xs font-semibold flex items-center justify-between border ${
         userRole === 'General Manager'
@@ -526,19 +754,40 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
           <div className="lg:col-span-7 xl:col-span-8 space-y-4">
             {/* Search and Category Filter Bar */}
             <div className="bg-white p-4 border border-[#E5E2DA] space-y-3">
-              <div className="relative">
-                <Search className="w-4 h-4 text-[#8C8984] absolute left-3 top-3" />
-                <input
-                  type="text"
-                  placeholder="Search dishes, drinks, delicacies, suya..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2.5 bg-[#FDFCF9] border border-[#E5E2DA] text-xs focus:outline-none focus:border-[#1A1A1A]"
-                />
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="w-4 h-4 text-[#8C8984] absolute left-3 top-3" />
+                  <input
+                    type="text"
+                    placeholder="Search dishes, drinks, delicacies, suya..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2.5 bg-[#FDFCF9] border border-[#E5E2DA] text-xs focus:outline-none focus:border-[#1A1A1A]"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingMenuItem(null);
+                    setNewDishName(searchQuery.trim());
+                    setNewDishCategory('FOOD MENU');
+                    setNewDishPrice(3500);
+                    setNewDishDesc('');
+                    setNewDishPrepTime(15);
+                    setNewDishImageUrl('');
+                    setNewDishSpicy(false);
+                    setNewDishChefSpecial(false);
+                    setIsNewMenuModalOpen(true);
+                  }}
+                  className="px-3.5 py-2 bg-[#024628] hover:bg-[#03331d] text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shrink-0 transition-colors shadow-xs"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">Add Dish</span>
+                </button>
               </div>
 
               <div className="flex flex-wrap gap-1.5 pt-1">
-                {['All', 'FOOD MENU', 'SNACKS', 'PROTEIN', 'DRINKS'].map((cat) => (
+                {allCategories.map((cat) => (
                   <button
                     key={cat}
                     onClick={() => setSelectedCategory(cat)}
@@ -979,7 +1228,18 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
                 <span>Import Text/CSV Menu</span>
               </button>
               <button
-                onClick={() => setIsNewMenuModalOpen(true)}
+                onClick={() => {
+                  setEditingMenuItem(null);
+                  setNewDishName('');
+                  setNewDishCategory('FOOD MENU');
+                  setNewDishPrice(3500);
+                  setNewDishDesc('');
+                  setNewDishPrepTime(15);
+                  setNewDishImageUrl('');
+                  setNewDishSpicy(false);
+                  setNewDishChefSpecial(false);
+                  setIsNewMenuModalOpen(true);
+                }}
                 className="px-4 py-2 bg-[#1A1A1A] text-[#FDFCF9] text-xs font-bold uppercase tracking-wider flex items-center gap-1.5"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -1004,24 +1264,75 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
                 {menuItems.map((item) => (
                   <tr key={item.id} className="hover:bg-[#FDFCF9]">
                     <td className="p-3 font-bold text-[#1A1A1A]">
-                      {item.name}
-                      {item.isChefSpecial && (
-                        <span className="ml-2 px-1.5 py-0.5 bg-[#C8B282] text-[#1A1A1A] text-[8px] uppercase font-bold">
-                          Chef Special
-                        </span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {item.imageUrl && (
+                          <img
+                            src={item.imageUrl}
+                            alt={item.name}
+                            className="w-8 h-8 rounded-sm object-cover border border-[#E5E2DA]"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                          />
+                        )}
+                        <div>
+                          <span>{item.name}</span>
+                          {item.isChefSpecial && (
+                            <span className="ml-2 px-1.5 py-0.5 bg-[#C8B282] text-[#1A1A1A] text-[8px] uppercase font-bold">
+                              Chef Special
+                            </span>
+                          )}
+                          {item.isSpicy && (
+                            <span className="ml-1 px-1.5 py-0.5 bg-[#8B2626] text-white text-[8px] uppercase font-bold">
+                              Spicy
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </td>
                     <td className="p-3 text-[#73706B]">{item.category}</td>
                     <td className="p-3 font-serif font-bold text-[#1A1A1A]">{formatNaira(item.price)}</td>
                     <td className="p-3 text-[#73706B]">{item.prepTimeMinutes} mins</td>
                     <td className="p-3">
-                      <span className="px-2 py-0.5 bg-[#F0F7F3] text-[#2D5A44] border border-[#C4E2D2] text-[9px] font-bold uppercase">
-                        Available
-                      </span>
+                      <button
+                        type="button"
+                        onClick={() => onUpdateMenuItem({ ...item, available: !item.available })}
+                        title="Click to toggle availability"
+                        className={`px-2 py-0.5 border text-[9px] font-bold uppercase cursor-pointer transition-colors ${
+                          item.available !== false
+                            ? 'bg-[#F0F7F3] text-[#2D5A44] border-[#C4E2D2] hover:bg-[#d8ede1]'
+                            : 'bg-[#FFF1F0] text-[#CF1322] border-[#FFA39E] hover:bg-[#ffe2e0]'
+                        }`}
+                      >
+                        {item.available !== false ? 'Available' : 'Unavailable'}
+                      </button>
                     </td>
                     <td className="p-3 text-right space-x-2">
                       <button
-                        onClick={() => onDeleteMenuItem(item.id)}
+                        type="button"
+                        onClick={() => {
+                          setEditingMenuItem(item);
+                          setNewDishName(item.name);
+                          setNewDishCategory(item.category);
+                          setNewDishPrice(item.price);
+                          setNewDishDesc(item.description || '');
+                          setNewDishPrepTime(item.prepTimeMinutes || 15);
+                          setNewDishImageUrl(item.imageUrl || '');
+                          setNewDishSpicy(!!item.isSpicy);
+                          setNewDishChefSpecial(!!item.isChefSpecial);
+                          setIsNewMenuModalOpen(true);
+                        }}
+                        className="text-[#024628] font-bold text-[10px] uppercase hover:underline"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (confirm(`Are you sure you want to delete "${item.name}"?`)) {
+                            onDeleteMenuItem(item.id);
+                            setSuccessToast(`Deleted "${item.name}" from menu.`);
+                            setTimeout(() => setSuccessToast(null), 3000);
+                          }
+                        }}
                         className="text-[#8B2626] font-bold text-[10px] uppercase hover:underline"
                       >
                         Delete
@@ -1092,20 +1403,25 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
         </div>
       )}
 
-      {/* MODAL: Add New Dish */}
+      {/* MODAL: Add / Edit Dish */}
       {isNewMenuModalOpen && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
           <form onSubmit={handleCreateMenuItem} className="bg-white max-w-lg w-full p-6 border border-[#1A1A1A] shadow-xl space-y-4">
             <div className="flex justify-between items-start border-b border-[#E5E2DA] pb-3">
               <div>
                 <h3 className="font-serif font-bold text-lg text-[#1A1A1A]">
-                  Add New Dish or Drink to Menu
+                  {editingMenuItem ? 'Edit Menu Dish or Drink' : 'Add New Dish or Drink to Menu'}
                 </h3>
-                <p className="text-xs text-[#73706B]">Create item for immediate POS ordering</p>
+                <p className="text-xs text-[#73706B]">
+                  {editingMenuItem ? 'Update pricing, category, prep time or details' : 'Create item for immediate POS ordering'}
+                </p>
               </div>
               <button
                 type="button"
-                onClick={() => setIsNewMenuModalOpen(false)}
+                onClick={() => {
+                  setIsNewMenuModalOpen(false);
+                  setEditingMenuItem(null);
+                }}
                 className="text-xs font-bold text-[#8C8984] hover:text-[#1A1A1A]"
               >
                 ✕ Close
@@ -1148,10 +1464,35 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
                   <input
                     type="number"
                     required
-                    min={100}
+                    min={50}
                     value={newDishPrice}
                     onChange={(e) => setNewDishPrice(parseInt(e.target.value) || 0)}
                     className="w-full p-2 bg-[#FDFCF9] border border-[#E5E2DA] font-mono font-bold"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-[#1A1A1A] block mb-1">Prep Time (Mins)</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={180}
+                    value={newDishPrepTime}
+                    onChange={(e) => setNewDishPrepTime(parseInt(e.target.value) || 15)}
+                    className="w-full p-2 bg-[#FDFCF9] border border-[#E5E2DA]"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-[#1A1A1A] block mb-1">Image URL (Optional)</label>
+                  <input
+                    type="url"
+                    placeholder="https://... or empty"
+                    value={newDishImageUrl}
+                    onChange={(e) => setNewDishImageUrl(e.target.value)}
+                    className="w-full p-2 bg-[#FDFCF9] border border-[#E5E2DA]"
                   />
                 </div>
               </div>
@@ -1191,13 +1532,16 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
             <div className="flex gap-2 pt-3 border-t border-[#E5E2DA]">
               <button
                 type="submit"
-                className="flex-1 py-2.5 bg-[#1A1A1A] text-[#FDFCF9] text-xs font-bold uppercase tracking-wider"
+                className="flex-1 py-2.5 bg-[#024628] hover:bg-[#03331d] text-white text-xs font-bold uppercase tracking-wider transition-colors"
               >
-                Save Item to Menu
+                {editingMenuItem ? 'Save Changes' : 'Save Item to Menu'}
               </button>
               <button
                 type="button"
-                onClick={() => setIsNewMenuModalOpen(false)}
+                onClick={() => {
+                  setIsNewMenuModalOpen(false);
+                  setEditingMenuItem(null);
+                }}
                 className="px-4 py-2.5 bg-[#F5F2ED] text-[#1A1A1A] text-xs font-bold uppercase tracking-wider"
               >
                 Cancel
@@ -1272,7 +1616,7 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
               id: pendingCheckoutOrder.id,
               reservationId: '',
               guestId: '',
-              guestName: pendingCheckoutOrder.customerName,
+              guestName: pendingCheckoutOrder.customerName || 'Walk-in Guest',
               guestPhone: '',
               roomNumber: pendingCheckoutOrder.tableOrRoom,
               roomCategory: 'Standard',
@@ -1281,7 +1625,13 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
               nights: 0,
               roomChargePerNight: 0,
               totalRoomCharge: 0,
-              additionalServices: pendingCheckoutOrder.items.map(i => ({ description: i.menuItem.name, amount: i.menuItem.price * i.quantity })),
+              additionalServices: pendingCheckoutOrder.items.map((i, idx) => ({
+                id: `srv-${idx}-${Date.now()}`,
+                description: i.menuItem.name,
+                category: 'Restaurant & Room Service' as const,
+                amount: i.menuItem.price * i.quantity,
+                date: new Date().toISOString()
+              })),
               subtotal: pendingCheckoutOrder.subtotal,
               tax: pendingCheckoutOrder.tax,
               discount: 0,
@@ -1302,28 +1652,43 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
         />
       )}
 
-      {/* TAB 4: DASHBOARD */}
+      {/* TAB: DASHBOARD */}
       {activeTab === 'dashboard' && (
-        <div className="flex flex-col items-center justify-center h-[60vh] text-center border-2 border-dashed border-[#E5E2DA] rounded-lg p-10 bg-white">
-          <Building2 className="w-16 h-16 text-[#C8B282] mb-4" />
-          <h2 className="text-2xl font-bold text-[#1A1A1A] mb-2">Dashboard</h2>
-          <p className="text-[#73706B] max-w-md mx-auto">
-            Welcome to the Restaurant Management System. This dashboard view is currently a placeholder and will be populated with key metrics and live activity feeds in a future update.
-          </p>
-          <button onClick={() => setActiveTab('pos')} className="mt-6 px-6 py-2 bg-[#024628] text-white text-sm font-semibold rounded hover:bg-[#03331d] transition-colors">
-            Go to Point of Sale
-          </button>
-        </div>
+        <Dashboard
+          orders={orders}
+          menuItems={menuItems}
+          cashierName={cashierName}
+          onNavigate={(tab) => setActiveTab(tab as RestaurantTab)}
+        />
       )}
 
-      {/* TAB 5: ANALYTICS */}
-      {activeTab === 'analytics' && (
+      {/* OTHER TABS UNDER CONSTRUCTION */}
+      {[
+        'table_plan',
+        'reservations',
+        'inventory',
+        'suppliers',
+        'expenses',
+        'financials',
+        'order_history',
+        'customer_crm',
+        'staff',
+        'audit_trail',
+        'settings',
+        'analytics'
+      ].includes(activeTab) && (
         <div className="flex flex-col items-center justify-center h-[60vh] text-center border-2 border-dashed border-[#E5E2DA] rounded-lg p-10 bg-white">
-          <FileSpreadsheet className="w-16 h-16 text-[#C8B282] mb-4" />
-          <h2 className="text-2xl font-bold text-[#1A1A1A] mb-2">Analytics & Reports</h2>
+          <Settings className="w-16 h-16 text-[#C8B282] mb-4" />
+          <h2 className="text-2xl font-bold text-[#1A1A1A] mb-2">Module Under Construction</h2>
           <p className="text-[#73706B] max-w-md mx-auto">
-            This module will feature comprehensive sales reports, menu performance analytics, and cashier end-of-day summaries. It is currently under construction.
+            This module is part of the expanded architecture and will be implemented in a future update.
           </p>
+          <button
+            onClick={() => setActiveTab('pos')}
+            className="mt-6 px-6 py-2 bg-[#1A1A1A] text-white text-xs font-bold uppercase tracking-wider rounded hover:bg-[#2A2A2A] transition-colors"
+          >
+            Go to Point of Sale
+          </button>
         </div>
       )}
       

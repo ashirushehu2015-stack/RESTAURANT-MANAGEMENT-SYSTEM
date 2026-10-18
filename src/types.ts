@@ -43,8 +43,10 @@ export interface RestaurantOrder {
   serviceCharge: number;
   grandTotal: number;
   paymentMethod: PaymentMethod;
-  paymentStatus: 'Paid' | 'Pending';
+  paymentStatus: 'Paid' | 'Pending' | 'Voided';
   kitchenStatus: 'Pending' | 'Preparing' | 'Ready' | 'Served';
+  status?: 'Pending' | 'Preparing' | 'Ready' | 'Served';
+  transactionRef?: string;
   createdAt: string;
   cashierName: string;
   customerName?: string;
@@ -122,6 +124,7 @@ export interface Invoice {
   balance: number;
   status: 'Unpaid' | 'Partially Paid' | 'Fully Paid';
   createdAt: string;
+  dueDate?: string;
 }
 
 export type PaymentMethod = 'Cash' | 'POS Machine' | 'Bank Transfer' | 'Opay' | 'Moniepoint';
@@ -174,6 +177,8 @@ export interface AuditLog {
 }
 
 export type UserRole = 
+  | 'super_admin'
+  | 'Super Admin'
   | 'General Manager'
   | 'Supervisor'
   | 'Front Desk Officer'
@@ -182,12 +187,12 @@ export type UserRole =
   | 'Restaurant Waiter 1'
   | 'Restaurant Waiter 2'
   | 'Kitchen Manager'
+  | 'Head Chef'
   | 'Kitchen Waiter 1'
   | 'Kitchen Waiter 2'
   | 'Hotel Manager'
   | 'Cashier' 
-  | 'Duty Manager' 
-  | 'Supervisor';
+  | 'Duty Manager';
 
 export interface UserProfile {
   id: string;

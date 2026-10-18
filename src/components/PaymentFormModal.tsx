@@ -80,10 +80,8 @@ export const PaymentFormModal: React.FC<PaymentFormModalProps> = ({
         });
         if (response.gatewayResponse?.virtualAccount) {
           setVirtualAccount({
-            accountNumber: response.gatewayResponse.virtualAccount,
-            bankName: response.gatewayResponse.bank,
-            amount: amountPaidNow,
-            expiresIn: 30
+            account: response.gatewayResponse.virtualAccount,
+            bank: response.gatewayResponse.bank
           });
           setTransactionRef(response.reference);
         }
