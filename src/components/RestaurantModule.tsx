@@ -8,6 +8,7 @@ import { ExpensesModule } from './ExpensesModule';
 import { OrderHistoryModule } from './OrderHistoryModule';
 import { TableFloorPlanView } from './TableFloorPlanView';
 import { ReservationsModule } from './ReservationsModule';
+import { FinancialsModule } from './FinancialsModule';
 import { INITIAL_TABLES } from '../data/tableData';
 import type { RestaurantTable } from '../types';
 import { formatNaira, formatDateFormatted } from '../utils/formatters';
@@ -1719,6 +1720,15 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
         />
       )}
 
+      {/* TAB: FINANCIALS & P&L */}
+      {activeTab === 'financials' && (
+        <FinancialsModule
+          orders={orders}
+          cashierName={cashierName}
+          userRole={userRole}
+        />
+      )}
+
       {/* TAB: ORDER HISTORY */}
       {activeTab === 'order_history' && (
         <OrderHistoryModule
@@ -1729,7 +1739,6 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
 
       {/* OTHER TABS UNDER CONSTRUCTION */}
       {[
-        'financials',
         'customer_crm',
         'staff',
         'audit_trail',
