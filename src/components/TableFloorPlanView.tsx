@@ -22,15 +22,19 @@ interface TableFloorPlanViewProps {
   orders?: any[];
   onOpenInPos: (tableNumber: string) => void;
   cashierName?: string;
+  tables?: RestaurantTable[];
+  onSaveTables?: (tables: RestaurantTable[]) => void;
 }
 
 export const TableFloorPlanView: React.FC<TableFloorPlanViewProps> = ({
   orders = [],
   onOpenInPos,
-  cashierName = 'Prototype Cashier'
+  cashierName = 'Prototype Cashier',
+  tables: propTables,
+  onSaveTables
 }) => {
   // Load tables from localStorage or default to INITIAL_TABLES
-  const [tables, setTables] = useState<RestaurantTable[]>(() => {
+  const [internalTables, setInternalTables] = useState<RestaurantTable[]>(() => {
     try {
       const saved = localStorage.getItem('fulbe_restaurant_tables');
       if (saved) return JSON.parse(saved);
@@ -40,8 +44,14 @@ export const TableFloorPlanView: React.FC<TableFloorPlanViewProps> = ({
     return INITIAL_TABLES;
   });
 
+  const tables = propTables || internalTables;
+
   const saveTables = (newTables: RestaurantTable[]) => {
-    setTables(newTables);
+    if (onSaveTables) {
+      onSaveTables(newTables);
+    } else {
+      setInternalTables(newTables);
+    }
     try {
       localStorage.setItem('fulbe_restaurant_tables', JSON.stringify(newTables));
     } catch (e) {

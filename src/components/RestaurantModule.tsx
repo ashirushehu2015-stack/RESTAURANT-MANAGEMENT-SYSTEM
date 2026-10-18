@@ -6,6 +6,9 @@ import { InventoryModule } from './InventoryModule';
 import { SuppliersModule } from './SuppliersModule';
 import { ExpensesModule } from './ExpensesModule';
 import { TableFloorPlanView } from './TableFloorPlanView';
+import { ReservationsModule } from './ReservationsModule';
+import { INITIAL_TABLES } from '../data/tableData';
+import type { RestaurantTable } from '../types';
 import { formatNaira, formatDateFormatted } from '../utils/formatters';
 import { 
   Utensils, 
@@ -138,6 +141,36 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
   const [activeTab, setActiveTab] = useState<RestaurantTab>(initialTab || 'dashboard');
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [pendingCheckoutOrder, setPendingCheckoutOrder] = useState<RestaurantOrder | null>(null);
+
+  // Shared Tables State across Floor Plan, Reservations & POS
+  const [tables, setTables] = useState<RestaurantTable[]>(() => {
+    try {
+      const saved = localStorage.getItem('fulbe_restaurant_tables');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error('Error loading tables', e);
+    }
+    return INITIAL_TABLES;
+  });
+
+  const handleUpdateTable = (tableId: string, updates: Partial<RestaurantTable>) => {
+    const updated = tables.map(t => t.id === tableId ? { ...t, ...updates } : t);
+    setTables(updated);
+    try {
+      localStorage.setItem('fulbe_restaurant_tables', JSON.stringify(updated));
+    } catch (e) {
+      console.error('Error saving tables', e);
+    }
+  };
+
+  const handleSaveTables = (newTables: RestaurantTable[]) => {
+    setTables(newTables);
+    try {
+      localStorage.setItem('fulbe_restaurant_tables', JSON.stringify(newTables));
+    } catch (e) {
+      console.error('Error saving tables', e);
+    }
+  };
 
   React.useEffect(() => {
     if (initialTab) {
@@ -1685,6 +1718,8 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
       {activeTab === 'table_plan' && (
         <TableFloorPlanView
           orders={orders}
+          tables={tables}
+          onSaveTables={handleSaveTables}
           onOpenInPos={(t) => {
             setTableOrRoom(t);
             setActiveTab('pos');
@@ -1693,9 +1728,23 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
         />
       )}
 
+      {/* TAB: RESERVATIONS */}
+      {activeTab === 'reservations' && (
+        <ReservationsModule
+          tables={tables}
+          onUpdateTable={handleUpdateTable}
+          onOpenInPos={(t, custName) => {
+            setTableOrRoom(t);
+            if (custName) setCustomerName(custName);
+            setActiveTab('pos');
+          }}
+          onNavigateToFloorPlan={() => setActiveTab('table_plan')}
+          cashierName={cashierName}
+        />
+      )}
+
       {/* OTHER TABS UNDER CONSTRUCTION */}
       {[
-        'reservations',
         'financials',
         'order_history',
         'customer_crm',

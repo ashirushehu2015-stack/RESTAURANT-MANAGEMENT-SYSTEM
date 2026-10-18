@@ -310,3 +310,23 @@ export interface RestaurantTable {
   reservationTime?: string;
   notes?: string;
 }
+
+
+export type ReservationStatus = 'Confirmed' | 'Seated' | 'Completed' | 'Cancelled' | 'No-Show';
+
+export interface Reservation {
+  id: string;
+  customerName: string;
+  phoneNumber: string;
+  email?: string;
+  guestCount: number;
+  tableId: string;
+  tableNumber: string;
+  floor: TableFloor;
+  reservationDate: string;
+  reservationTime: string;
+  durationMinutes?: number;
+  status: ReservationStatus;
+  specialRequests?: string;
+  createdAt: string;
+}
