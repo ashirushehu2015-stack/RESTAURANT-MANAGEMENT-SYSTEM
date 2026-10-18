@@ -8,6 +8,7 @@ import { ExpensesModule } from './ExpensesModule';
 import { OrderHistoryModule } from './OrderHistoryModule';
 import { CustomerCRMModule } from './CustomerCRMModule';
 import { AuditTrailModule } from './AuditTrailModule';
+import { SystemSettingsModule } from './SystemSettingsModule';
 import { TableFloorPlanView } from './TableFloorPlanView';
 import { ReservationsModule } from './ReservationsModule';
 import { FinancialsModule } from './FinancialsModule';
@@ -1825,9 +1826,15 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
         />
       )}
 
+      {/* TAB: SYSTEM SETTINGS */}
+      {activeTab === 'settings' && (
+        <SystemSettingsModule
+          cashierName={cashierName}
+        />
+      )}
+
       {/* OTHER TABS UNDER CONSTRUCTION */}
       {[
-        'settings',
         'analytics'
       ].includes(activeTab) && (
         <div className="flex flex-col items-center justify-center h-[60vh] text-center border-2 border-dashed border-[#E5E2DA] rounded-lg p-10 bg-white">

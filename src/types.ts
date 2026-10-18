@@ -409,3 +409,75 @@ export interface AuditRecord {
   integrityHash?: string;
 }
 
+export interface RestaurantBusinessProfile {
+  name: string;
+  tagline: string;
+  phone: string;
+  email: string;
+  website?: string;
+  address: string;
+  rcNumber: string;
+  tinNumber: string;
+  vatRegNumber: string;
+  currency: string;
+  defaultVatRate: number; // e.g. 5
+  deliveryLogisticsFee: number; // e.g. 500
+  serviceChargePercentage: number; // e.g. 0
+}
+
+export interface ReceiptSettings {
+  printerType: '80mm' | '58mm' | 'a4';
+  headerText: string;
+  footerText: string;
+  showWifiPassword: boolean;
+  wifiPassword?: string;
+  showDuplicateWatermark: boolean;
+  printCustomerCopyOnPayment: boolean;
+  printKitchenTicketOnOrder: boolean;
+  showVatBreakdown: boolean;
+  showCashierName: boolean;
+}
+
+export interface POSSettings {
+  defaultDiningType: 'Dine-In' | 'Takeaway' | 'Home / Office Delivery';
+  autoReleaseTableOnPaid: boolean;
+  requireManagerPinForVoid: boolean;
+  requireManagerPinForDiscount: boolean;
+  allowCustomNotesOnItems: boolean;
+  enableStockDeductionOnSale: boolean;
+  managerPin: string;
+}
+
+export interface BankAccountConfig {
+  id: string;
+  bankName: string;
+  accountName: string;
+  accountNumber: string;
+  isPrimary: boolean;
+  isActive: boolean;
+}
+
+export interface PaymentGatewaySettings {
+  enabledMethods: ('Cash' | 'POS Machine' | 'Bank Transfer' | 'Opay' | 'Moniepoint')[];
+  requireBankTransferReference: boolean;
+  bankAccounts: BankAccountConfig[];
+}
+
+export interface KDSSettings {
+  targetPrepTimeMinutes: number; // e.g. 15
+  warningPrepTimeMinutes: number; // e.g. 20
+  criticalPrepTimeMinutes: number; // e.g. 25
+  playAudioChimeOnNewOrder: boolean;
+  autoBumpServedOrdersAfterMinutes: number;
+}
+
+export interface SystemSettings {
+  profile: RestaurantBusinessProfile;
+  receipt: ReceiptSettings;
+  pos: POSSettings;
+  payment: PaymentGatewaySettings;
+  kds: KDSSettings;
+  lastUpdated: string;
+}
+
+
