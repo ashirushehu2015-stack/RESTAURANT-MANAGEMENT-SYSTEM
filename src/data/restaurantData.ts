@@ -1,4 +1,4 @@
-import type { RestaurantMenuItem, RestaurantOrder, InventoryItem } from '../types';
+import type { RestaurantMenuItem, RestaurantOrder, InventoryItem, Supplier, PurchaseOrder } from '../types';
 
 export const INITIAL_MENU_ITEMS: RestaurantMenuItem[] = [
   // --- FOOD MENU ---
@@ -578,5 +578,96 @@ export const INITIAL_INVENTORY_ITEMS: InventoryItem[] = [
     costPerUnit: 1200,
     supplier: "Mile 12 Market",
     lastRestocked: "2026-08-16"
+  }
+];
+
+export const INITIAL_SUPPLIERS: Supplier[] = [
+  {
+    id: "SUP-001",
+    name: "GreenValley Fresh Produce",
+    category: "Vegetables & Fruits",
+    contactPerson: "Alhaji Musa",
+    phone: "+234 801 234 5678",
+    email: "sales@greenvalley.ng",
+    status: "Active"
+  },
+  {
+    id: "SUP-002",
+    name: "Prime Cuts Butchery",
+    category: "Meat & Poultry",
+    contactPerson: "Chef Kunle",
+    phone: "+234 802 345 6789",
+    email: "orders@primecuts.com",
+    status: "Active"
+  },
+  {
+    id: "SUP-003",
+    name: "Oceanic Seafoods Ltd",
+    category: "Seafood",
+    contactPerson: "Madam Stella",
+    phone: "+234 803 456 7890",
+    email: "info@oceanicseafoods.ng",
+    status: "Active"
+  },
+  {
+    id: "SUP-004",
+    name: "Naija Beverage Corp",
+    category: "Beverages",
+    contactPerson: "Tunde Bakare",
+    phone: "+234 804 567 8901",
+    email: "distrib@naijabev.com",
+    status: "Active"
+  },
+  {
+    id: "SUP-005",
+    name: "City Packagings",
+    category: "Packaging",
+    contactPerson: "Emeka Uche",
+    phone: "+234 805 678 9012",
+    email: "sales@citypack.com.ng",
+    status: "Inactive"
+  }
+];
+
+export const INITIAL_PURCHASE_ORDERS: PurchaseOrder[] = [
+  {
+    id: "PO-26-001",
+    supplierId: "SUP-002",
+    supplierName: "Prime Cuts Butchery",
+    description: "Weekly Beef & Chicken Supply",
+    totalAmount: 450000,
+    orderDate: "2026-08-10",
+    expectedDelivery: "2026-08-12",
+    status: "Paid"
+  },
+  {
+    id: "PO-26-002",
+    supplierId: "SUP-001",
+    supplierName: "GreenValley Fresh Produce",
+    description: "Tomatoes, Onions, Peppers (Sacks)",
+    totalAmount: 125000,
+    orderDate: "2026-08-15",
+    expectedDelivery: "2026-08-17",
+    status: "Received"
+  },
+  {
+    id: "PO-26-003",
+    supplierId: "SUP-004",
+    supplierName: "Naija Beverage Corp",
+    description: "Soft Drinks & Water Restock",
+    totalAmount: 85000,
+    orderDate: "2026-08-16",
+    expectedDelivery: "2026-08-18",
+    status: "Pending"
+  },
+  {
+    id: "PO-26-004",
+    supplierId: "SUP-003",
+    supplierName: "Oceanic Seafoods Ltd",
+    description: "Fresh Tilapia & Catfish",
+    totalAmount: 210000,
+    orderDate: "2026-08-17",
+    expectedDelivery: "2026-08-19",
+    status: "Pending"
   }
 ];

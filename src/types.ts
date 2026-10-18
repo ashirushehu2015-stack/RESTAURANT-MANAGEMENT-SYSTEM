@@ -45,6 +45,27 @@ export interface InventoryItem {
   lastRestocked?: string;
 }
 
+export interface Supplier {
+  id: string;
+  name: string;
+  category: string;
+  contactPerson: string;
+  phone: string;
+  email: string;
+  status: 'Active' | 'Inactive';
+}
+
+export interface PurchaseOrder {
+  id: string;
+  supplierId: string;
+  supplierName: string;
+  description: string;
+  totalAmount: number;
+  orderDate: string;
+  expectedDelivery: string;
+  status: 'Pending' | 'Received' | 'Paid';
+}
+
 export interface RestaurantOrder {
   id: string; // e.g. ORD-2026-0041
   tableOrRoom: string; // e.g. "Table 04" or "Room 108"
