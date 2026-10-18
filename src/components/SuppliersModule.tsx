@@ -29,8 +29,8 @@ import {
   Download
 } from 'lucide-react';
 
-const SUPPLIERS_STORAGE_KEY = 'fulbe_restaurant_suppliers';
-const PURCHASE_ORDERS_STORAGE_KEY = 'fulbe_restaurant_purchase_orders';
+const SUPPLIERS_STORAGE_KEY = 'restaurant_management_suppliers';
+const PURCHASE_ORDERS_STORAGE_KEY = 'restaurant_management_purchase_orders';
 
 const COMMODITY_PRESETS = [
   'Boneless Beef (Grade A)',
@@ -62,7 +62,11 @@ const UNIT_OPTIONS = [
 
 function loadSuppliersFromStorage(): Supplier[] {
   try {
-    const saved = localStorage.getItem(SUPPLIERS_STORAGE_KEY) || sessionStorage.getItem(SUPPLIERS_STORAGE_KEY);
+    const saved = 
+      localStorage.getItem(SUPPLIERS_STORAGE_KEY) || 
+      sessionStorage.getItem(SUPPLIERS_STORAGE_KEY) ||
+      localStorage.getItem('fulbe_restaurant_suppliers') || 
+      sessionStorage.getItem('fulbe_restaurant_suppliers');
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed) && parsed.length > 0) {
@@ -77,7 +81,11 @@ function loadSuppliersFromStorage(): Supplier[] {
 
 function loadOrdersFromStorage(): PurchaseOrder[] {
   try {
-    const saved = localStorage.getItem(PURCHASE_ORDERS_STORAGE_KEY) || sessionStorage.getItem(PURCHASE_ORDERS_STORAGE_KEY);
+    const saved = 
+      localStorage.getItem(PURCHASE_ORDERS_STORAGE_KEY) || 
+      sessionStorage.getItem(PURCHASE_ORDERS_STORAGE_KEY) ||
+      localStorage.getItem('fulbe_restaurant_purchase_orders') || 
+      sessionStorage.getItem('fulbe_restaurant_purchase_orders');
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed) && parsed.length > 0) {
@@ -403,11 +411,11 @@ function printPurchaseOrderVoucher(order: PurchaseOrder, supplier?: Supplier) {
           <!-- Header -->
           <div class="header">
             <div class="logo-area">
-              <h1>Fulbe Restaurant Management</h1>
+              <h1>Restaurant Management System</h1>
               <div class="tagline">Official Procurement & Purchase Voucher</div>
               <div class="address">
                 Opp. Mareri Juma'at Mosque Lalan Zaria Road, S/fulani Park Box 767, Gusau, Zamfara State.<br/>
-                TEL: +234 803 000 0000 • Email: procurement@fulbe-restaurant.ng
+                TEL: +234 803 000 0000 • Email: procurement@restaurant-management.ng
               </div>
             </div>
             <div class="po-meta">
@@ -525,7 +533,7 @@ function printPurchaseOrderVoucher(order: PurchaseOrder, supplier?: Supplier) {
 
           <!-- Footer Note -->
           <div class="footer-note">
-            This is an official procurement purchase order issued by Fulbe Restaurant & Hospitality Management.
+            This is an official procurement purchase order issued by Restaurant Management System.
             Original copy retained in financial records; duplicate handed to supplier upon delivery and inspection.
           </div>
         </div>

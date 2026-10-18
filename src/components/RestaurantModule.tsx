@@ -687,31 +687,6 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
             </button>
           </div>
         )}
-      {/* Role Domain Access Badge */}
-      <div className={`p-2.5 px-4 text-xs font-semibold flex items-center justify-between border ${
-        userRole === 'General Manager'
-          ? 'bg-[#1A1A1A]/10 border-[#1A1A1A]/30 text-[#1A1A1A]'
-          : userRole === 'Kitchen Manager' || userRole === 'Head Chef'
-            ? 'bg-[#8C4A27]/15 border-[#8C4A27]/40 text-[#8C4A27]'
-            : userRole === 'Restaurant Manager' || userRole === 'Cashier'
-              ? 'bg-[#8B2626]/15 border-[#8B2626]/40 text-[#8B2626]'
-              : 'bg-[#243B6B]/15 border-[#243B6B]/40 text-[#1E2E50]'
-      }`}>
-        <div className="flex items-center gap-2">
-          <span className="font-bold uppercase tracking-wider text-[10px] px-2 py-0.5 bg-[#1A1A1A] text-white">
-            Role: {userRole}
-          </span>
-          <span>
-            {userRole === 'General Manager'
-              ? 'Global General Manager Scope: Full Administrative Access to Hotel PMS, Restaurant POS, and Kitchen KDS.'
-              : userRole === 'Kitchen Manager' || userRole === 'Head Chef'
-                ? 'Kitchen Business Scope: Kitchen Display System (KDS), Order Prep Queue & Chef Workflow Only.'
-                : userRole === 'Restaurant Manager' || userRole === 'Cashier'
-                  ? 'Restaurant Business Scope: Food & Beverage POS, Table Ordering & Menu Catalog Management Only.'
-                  : 'Hotel Business Scope Notice: Hotel Manager manages Hotel Services. Restaurant & Kitchen businesses belong to F&B and Culinary managers.'}
-          </span>
-        </div>
-      </div>
 
       {/* Top Header Banner */}
       <div className="bg-[#1A1A1A] text-[#FDFCF9] p-6 border border-[#333333] shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">

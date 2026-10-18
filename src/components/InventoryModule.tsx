@@ -15,11 +15,15 @@ import {
   ArrowDownToLine
 } from 'lucide-react';
 
-const INVENTORY_STORAGE_KEY = 'fulbe_restaurant_inventory';
+const INVENTORY_STORAGE_KEY = 'restaurant_management_inventory';
 
 function loadInventoryFromStorage(): InventoryItem[] {
   try {
-    const saved = localStorage.getItem(INVENTORY_STORAGE_KEY) || sessionStorage.getItem(INVENTORY_STORAGE_KEY);
+    const saved = 
+      localStorage.getItem(INVENTORY_STORAGE_KEY) || 
+      sessionStorage.getItem(INVENTORY_STORAGE_KEY) ||
+      localStorage.getItem('fulbe_restaurant_inventory') || 
+      sessionStorage.getItem('fulbe_restaurant_inventory');
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed) && parsed.length > 0) {

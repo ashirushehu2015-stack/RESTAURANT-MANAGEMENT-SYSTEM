@@ -28,8 +28,8 @@ import {
   Coins
 } from 'lucide-react';
 
-const EXPENSES_STORAGE_KEY = 'fulbe_restaurant_expenses';
-const PETTY_CASH_STORAGE_KEY = 'fulbe_restaurant_petty_cash';
+const EXPENSES_STORAGE_KEY = 'restaurant_management_expenses';
+const PETTY_CASH_STORAGE_KEY = 'restaurant_management_petty_cash';
 
 const EXPENSE_CATEGORIES: ExpenseCategory[] = [
   'Power & Generator Fuel',
@@ -123,7 +123,11 @@ function numberToWords(num: number): string {
 
 function loadExpensesFromStorage(): ExpenseRecord[] {
   try {
-    const saved = localStorage.getItem(EXPENSES_STORAGE_KEY) || sessionStorage.getItem(EXPENSES_STORAGE_KEY);
+    const saved = 
+      localStorage.getItem(EXPENSES_STORAGE_KEY) || 
+      sessionStorage.getItem(EXPENSES_STORAGE_KEY) ||
+      localStorage.getItem('fulbe_restaurant_expenses') || 
+      sessionStorage.getItem('fulbe_restaurant_expenses');
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed) && parsed.length > 0) {
@@ -138,7 +142,11 @@ function loadExpensesFromStorage(): ExpenseRecord[] {
 
 function loadPettyCashFromStorage(): number {
   try {
-    const saved = localStorage.getItem(PETTY_CASH_STORAGE_KEY) || sessionStorage.getItem(PETTY_CASH_STORAGE_KEY);
+    const saved = 
+      localStorage.getItem(PETTY_CASH_STORAGE_KEY) || 
+      sessionStorage.getItem(PETTY_CASH_STORAGE_KEY) ||
+      localStorage.getItem('fulbe_restaurant_petty_cash') || 
+      sessionStorage.getItem('fulbe_restaurant_petty_cash');
     if (saved !== null) {
       const parsed = parseFloat(saved);
       if (!isNaN(parsed)) return parsed;
@@ -379,11 +387,11 @@ function printExpenseVoucher(expense: ExpenseRecord) {
         <div class="voucher-box">
           <div class="header">
             <div class="brand">
-              <h1>Fulbe Restaurant Management</h1>
+              <h1>Restaurant Management System</h1>
               <div class="sub">Official Expense Payment Voucher (PV)</div>
               <div class="address">
                 Opp. Mareri Juma'at Mosque Lalan Zaria Road, S/fulani Park Box 767, Gusau, Zamfara State.<br/>
-                TEL: +234 803 000 0000 • Email: accounts@fulbe-restaurant.ng
+                TEL: +234 803 000 0000 • Email: accounts@restaurant-management.ng
               </div>
             </div>
             <div class="pv-badge-area">

@@ -4,15 +4,17 @@ import { INITIAL_MENU_ITEMS, INITIAL_RESTAURANT_ORDERS } from './data/restaurant
 import type { RestaurantMenuItem, RestaurantOrder, AuditLog } from './types';
 import { useState, useEffect } from 'react';
 
-const MENU_STORAGE_KEY = 'fulbe_restaurant_menu_items';
-const ORDERS_STORAGE_KEY = 'fulbe_restaurant_orders';
-const AUTH_STORAGE_KEY = 'fulbe_restaurant_logged_in';
+const MENU_STORAGE_KEY = 'restaurant_management_menu_items';
+const ORDERS_STORAGE_KEY = 'restaurant_management_orders';
+const AUTH_STORAGE_KEY = 'restaurant_management_logged_in';
 
 function checkIsLoggedIn(): boolean {
   try {
     return (
       localStorage.getItem(AUTH_STORAGE_KEY) === 'true' ||
-      sessionStorage.getItem(AUTH_STORAGE_KEY) === 'true'
+      sessionStorage.getItem(AUTH_STORAGE_KEY) === 'true' ||
+      localStorage.getItem('fulbe_restaurant_logged_in') === 'true' ||
+      sessionStorage.getItem('fulbe_restaurant_logged_in') === 'true'
     );
   } catch (e) {
     console.error('Failed to load auth status from storage', e);
@@ -22,7 +24,11 @@ function checkIsLoggedIn(): boolean {
 
 function loadInitialMenuItems(): RestaurantMenuItem[] {
   try {
-    const saved = localStorage.getItem(MENU_STORAGE_KEY) || sessionStorage.getItem(MENU_STORAGE_KEY);
+    const saved = 
+      localStorage.getItem(MENU_STORAGE_KEY) || 
+      sessionStorage.getItem(MENU_STORAGE_KEY) ||
+      localStorage.getItem('fulbe_restaurant_menu_items') || 
+      sessionStorage.getItem('fulbe_restaurant_menu_items');
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed) && parsed.length > 0) {
@@ -37,7 +43,11 @@ function loadInitialMenuItems(): RestaurantMenuItem[] {
 
 function loadInitialOrders(): RestaurantOrder[] {
   try {
-    const saved = localStorage.getItem(ORDERS_STORAGE_KEY) || sessionStorage.getItem(ORDERS_STORAGE_KEY);
+    const saved = 
+      localStorage.getItem(ORDERS_STORAGE_KEY) || 
+      sessionStorage.getItem(ORDERS_STORAGE_KEY) ||
+      localStorage.getItem('fulbe_restaurant_orders') || 
+      sessionStorage.getItem('fulbe_restaurant_orders');
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed)) {

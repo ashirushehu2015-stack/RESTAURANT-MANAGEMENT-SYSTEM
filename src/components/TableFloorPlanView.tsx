@@ -36,7 +36,7 @@ export const TableFloorPlanView: React.FC<TableFloorPlanViewProps> = ({
   // Load tables from localStorage or default to INITIAL_TABLES
   const [internalTables, setInternalTables] = useState<RestaurantTable[]>(() => {
     try {
-      const saved = localStorage.getItem('fulbe_restaurant_tables');
+      const saved = localStorage.getItem('restaurant_management_tables') || localStorage.getItem('fulbe_restaurant_tables');
       if (saved) return JSON.parse(saved);
     } catch (e) {
       console.error('Error loading tables from localStorage', e);
@@ -53,7 +53,7 @@ export const TableFloorPlanView: React.FC<TableFloorPlanViewProps> = ({
       setInternalTables(newTables);
     }
     try {
-      localStorage.setItem('fulbe_restaurant_tables', JSON.stringify(newTables));
+      localStorage.setItem('restaurant_management_tables', JSON.stringify(newTables));
     } catch (e) {
       console.error('Error saving tables to localStorage', e);
     }
