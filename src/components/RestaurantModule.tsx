@@ -5,6 +5,7 @@ import { Dashboard } from './Dashboard';
 import { InventoryModule } from './InventoryModule';
 import { SuppliersModule } from './SuppliersModule';
 import { ExpensesModule } from './ExpensesModule';
+import { OrderHistoryModule } from './OrderHistoryModule';
 import { TableFloorPlanView } from './TableFloorPlanView';
 import { ReservationsModule } from './ReservationsModule';
 import { INITIAL_TABLES } from '../data/tableData';
@@ -1718,10 +1719,17 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
         />
       )}
 
+      {/* TAB: ORDER HISTORY */}
+      {activeTab === 'order_history' && (
+        <OrderHistoryModule
+          orders={orders}
+          onReprintReceipt={printThermalReceipt}
+        />
+      )}
+
       {/* OTHER TABS UNDER CONSTRUCTION */}
       {[
         'financials',
-        'order_history',
         'customer_crm',
         'staff',
         'audit_trail',

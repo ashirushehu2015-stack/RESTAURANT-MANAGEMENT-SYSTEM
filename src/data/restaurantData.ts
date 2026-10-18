@@ -487,28 +487,127 @@ export const INITIAL_RESTAURANT_ORDERS: RestaurantOrder[] = [
     paymentMethod: 'POS Machine',
     paymentStatus: 'Paid',
     kitchenStatus: 'Served',
-    createdAt: '2026-08-02 11:30 AM',
+    createdAt: '2026-10-18 11:30 AM',
     cashierName: 'Aisha Garba',
     customerName: 'Alhaji Umar Sanusi'
   },
   {
     id: 'ORD-2026-0102',
-    tableOrRoom: 'Room 108 (VIP)',
-    orderType: 'Room Delivery',
+    tableOrRoom: 'Table 08 (Garden)',
+    orderType: 'Dine-In',
     items: [
-      { menuItem: INITIAL_MENU_ITEMS[12], quantity: 1 }, // Pizza Large
-      { menuItem: INITIAL_MENU_ITEMS[30], quantity: 2 }  // Malt
+      { menuItem: INITIAL_MENU_ITEMS[3], quantity: 3 }, // Fried Rice Special
+      { menuItem: INITIAL_MENU_ITEMS[21], quantity: 3 }, // Grilled Fresh Catfish
+      { menuItem: INITIAL_MENU_ITEMS[31], quantity: 3 }  // Fresh Chapman Cocktails
     ],
-    subtotal: 14600,
-    tax: 730,
-    serviceCharge: 300, // Room service at N300
-    grandTotal: 15630,
+    subtotal: 28500,
+    tax: 1425,
+    serviceCharge: 0,
+    grandTotal: 29925,
+    paymentMethod: 'Bank Transfer',
+    paymentStatus: 'Paid',
+    kitchenStatus: 'Served',
+    createdAt: '2026-10-18 12:45 PM',
+    cashierName: 'Prototype Cashier',
+    customerName: 'Barrister Nnamdi Kanu'
+  },
+  {
+    id: 'ORD-2026-0103',
+    tableOrRoom: 'Table 04',
+    orderType: 'Dine-In',
+    items: [
+      { menuItem: INITIAL_MENU_ITEMS[0], quantity: 2 }, // White Rice & Stew
+      { menuItem: INITIAL_MENU_ITEMS[20], quantity: 2 }, // Assorted Beef Stew
+      { menuItem: INITIAL_MENU_ITEMS[29], quantity: 2 }  // Fanta 50cl
+    ],
+    subtotal: 11000,
+    tax: 550,
+    serviceCharge: 0,
+    grandTotal: 11550,
     paymentMethod: 'Cash',
     paymentStatus: 'Paid',
-    kitchenStatus: 'Preparing',
-    createdAt: '2026-08-02 12:15 PM',
-    cashierName: 'Sarkin Fulani',
-    customerName: 'Chief Emeka Okafor'
+    kitchenStatus: 'Served',
+    createdAt: '2026-10-18 01:15 PM',
+    cashierName: 'Prototype Cashier',
+    customerName: 'Mallam Haruna Bello'
+  },
+  {
+    id: 'ORD-2026-0104',
+    tableOrRoom: 'Takeaway Counter',
+    orderType: 'Takeaway',
+    items: [
+      { menuItem: INITIAL_MENU_ITEMS[12], quantity: 2 }, // Chicken Supreme Pizza
+      { menuItem: INITIAL_MENU_ITEMS[30], quantity: 4 }  // Malt Drink
+    ],
+    subtotal: 21600,
+    tax: 1080,
+    serviceCharge: 0,
+    grandTotal: 22680,
+    paymentMethod: 'POS Machine',
+    paymentStatus: 'Paid',
+    kitchenStatus: 'Served',
+    createdAt: '2026-10-17 06:20 PM',
+    cashierName: 'Aisha Garba',
+    customerName: 'Dr. Zainab Ahmed'
+  },
+  {
+    id: 'ORD-2026-0105',
+    tableOrRoom: 'VIP Lounge 02',
+    orderType: 'Dine-In',
+    items: [
+      { menuItem: INITIAL_MENU_ITEMS[4], quantity: 4 }, // Seafood Paella Rice
+      { menuItem: INITIAL_MENU_ITEMS[23], quantity: 2 }, // Full Grilled Ram Ribs
+      { menuItem: INITIAL_MENU_ITEMS[32], quantity: 4 }  // Exotic Fruit Punch
+    ],
+    subtotal: 54000,
+    tax: 2700,
+    serviceCharge: 2500, // VIP lounge service
+    grandTotal: 59200,
+    paymentMethod: 'Bank Transfer',
+    paymentStatus: 'Paid',
+    kitchenStatus: 'Served',
+    createdAt: '2026-10-17 08:40 PM',
+    cashierName: 'Prototype Cashier',
+    customerName: 'Engr. Dapo Adeleke'
+  },
+  {
+    id: 'ORD-2026-0106',
+    tableOrRoom: 'Office Dispatch',
+    orderType: 'Home / Office Delivery',
+    items: [
+      { menuItem: INITIAL_MENU_ITEMS[1], quantity: 5 }, // 5x Jollof Rice Lunch Packs
+      { menuItem: INITIAL_MENU_ITEMS[22], quantity: 5 }, // 5x Peppered Chicken
+      { menuItem: INITIAL_MENU_ITEMS[28], quantity: 5 }  // 5x Coke
+    ],
+    subtotal: 35000,
+    tax: 1750,
+    serviceCharge: 1500, // Delivery logistics fee
+    grandTotal: 38250,
+    paymentMethod: 'Bank Transfer',
+    paymentStatus: 'Paid',
+    kitchenStatus: 'Served',
+    createdAt: '2026-10-15 01:10 PM',
+    cashierName: 'Prototype Cashier',
+    customerName: 'Access Bank Branch Corporate Lunch'
+  },
+  {
+    id: 'ORD-2026-0107',
+    tableOrRoom: 'Table 06',
+    orderType: 'Dine-In',
+    items: [
+      { menuItem: INITIAL_MENU_ITEMS[2], quantity: 1 },
+      { menuItem: INITIAL_MENU_ITEMS[28], quantity: 1 }
+    ],
+    subtotal: 4500,
+    tax: 225,
+    serviceCharge: 0,
+    grandTotal: 4725,
+    paymentMethod: 'Cash',
+    paymentStatus: 'Voided',
+    kitchenStatus: 'Pending',
+    createdAt: '2026-10-14 03:15 PM',
+    cashierName: 'Aisha Garba',
+    customerName: 'Customer Walked Out (Cancelled)'
   }
 ];
 
