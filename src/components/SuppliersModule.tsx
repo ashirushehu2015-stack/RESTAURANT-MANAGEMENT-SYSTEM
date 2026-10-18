@@ -24,7 +24,9 @@ import {
   Landmark,
   ArrowRight,
   Filter,
-  Package
+  Package,
+  Printer,
+  Download
 } from 'lucide-react';
 
 const SUPPLIERS_STORAGE_KEY = 'fulbe_restaurant_suppliers';
@@ -138,6 +140,411 @@ function persistOrders(orders: PurchaseOrder[]) {
   } catch (e) {}
 }
 
+// Print Voucher Generator function
+function printPurchaseOrderVoucher(order: PurchaseOrder, supplier?: Supplier) {
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) {
+    alert('Please allow popups to print the Purchase Order Voucher.');
+    return;
+  }
+
+  const supplierPhone = supplier?.phone || 'On File';
+  const supplierEmail = supplier?.email || 'procurement@supplier.ng';
+  const supplierContact = supplier?.contactPerson || 'Vendor Representative';
+  const supplierCategory = supplier?.category || 'General Procurement';
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Purchase Order Voucher - ${order.id}</title>
+        <meta charset="utf-8" />
+        <style>
+          @page {
+            size: A4 portrait;
+            margin: 12mm 15mm;
+          }
+          * {
+            box-sizing: border-box;
+          }
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            color: #1a1a1a;
+            line-height: 1.4;
+            margin: 0;
+            padding: 24px;
+            background: #fff;
+          }
+          .voucher-container {
+            max-width: 800px;
+            margin: 0 auto;
+            border: 2px solid #0b1221;
+            padding: 28px;
+            border-radius: 8px;
+            position: relative;
+          }
+          .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #0b1221;
+            padding-bottom: 18px;
+            margin-bottom: 22px;
+          }
+          .logo-area h1 {
+            font-size: 22px;
+            font-weight: 900;
+            color: #0b1221;
+            letter-spacing: -0.5px;
+            margin: 0;
+            text-transform: uppercase;
+          }
+          .logo-area .tagline {
+            font-size: 11px;
+            font-weight: 600;
+            color: #b45309;
+            margin-top: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          .logo-area .address {
+            font-size: 11px;
+            color: #555;
+            margin-top: 4px;
+            max-width: 440px;
+          }
+          .po-meta {
+            text-align: right;
+          }
+          .po-badge {
+            display: inline-block;
+            background: #0b1221;
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+          }
+          .po-id {
+            font-size: 24px;
+            font-weight: 900;
+            font-family: monospace;
+            color: #024628;
+            margin-top: 6px;
+          }
+          .po-date {
+            font-size: 11px;
+            color: #555;
+            margin-top: 4px;
+          }
+          .two-cols {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 22px;
+          }
+          .card {
+            background: #faf9f5;
+            border: 1px solid #e5e2da;
+            border-radius: 6px;
+            padding: 14px 16px;
+          }
+          .card-title {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #8c8984;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e5e2da;
+            padding-bottom: 6px;
+            margin: 0 0 8px 0;
+          }
+          .card-content {
+            font-size: 12px;
+            line-height: 1.6;
+          }
+          .card-content strong {
+            color: #1a1a1a;
+          }
+          .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 22px;
+          }
+          .table th {
+            background: #0b1221;
+            color: #fff;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 10px 12px;
+            text-align: left;
+          }
+          .table th.right, .table td.right {
+            text-align: right;
+          }
+          .table td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e2da;
+            font-size: 12px;
+          }
+          .totals-wrapper {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 24px;
+          }
+          .totals-table {
+            width: 360px;
+            background: #faf9f5;
+            border: 1px solid #e5e2da;
+            border-radius: 6px;
+            padding: 14px 18px;
+          }
+          .tot-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 6px;
+          }
+          .tot-row.grand {
+            border-top: 2px solid #0b1221;
+            padding-top: 8px;
+            margin-top: 6px;
+            font-size: 15px;
+            font-weight: 900;
+            color: #0b1221;
+          }
+          .status-banner {
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 800;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          }
+          .status-banner.paid {
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+          }
+          .status-banner.partial {
+            background: #fffbeb;
+            color: #92400e;
+            border: 1px solid #fde68a;
+          }
+          .status-banner.unpaid {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+          }
+          .signatures {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-top: 36px;
+            padding-top: 16px;
+            border-top: 1px dashed #d1d5db;
+          }
+          .sig-box {
+            text-align: center;
+          }
+          .sig-line {
+            border-top: 1px solid #1a1a1a;
+            margin-top: 45px;
+            margin-bottom: 6px;
+          }
+          .sig-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #555;
+            text-transform: uppercase;
+          }
+          .footer-note {
+            text-align: center;
+            font-size: 10px;
+            color: #8c8984;
+            margin-top: 28px;
+            border-top: 1px solid #e5e2da;
+            padding-top: 10px;
+          }
+          .no-print {
+            text-align: center;
+            margin-bottom: 20px;
+          }
+          .btn-print {
+            background: #024628;
+            color: #fff;
+            border: none;
+            padding: 10px 24px;
+            font-size: 14px;
+            font-weight: 800;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+          }
+          @media print {
+            .no-print { display: none !important; }
+            body { padding: 0 !important; }
+            .voucher-container { border: 1px solid #1a1a1a !important; padding: 20px !important; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="no-print">
+          <button class="btn-print" onclick="window.print()">🖨️ Print Purchase Order Voucher</button>
+          <span style="font-size: 12px; color: #555; margin-left: 12px;">(Select Save as PDF or your thermal / desktop printer)</span>
+        </div>
+
+        <div class="voucher-container">
+          <!-- Header -->
+          <div class="header">
+            <div class="logo-area">
+              <h1>Fulbe Restaurant Management</h1>
+              <div class="tagline">Official Procurement & Purchase Voucher</div>
+              <div class="address">
+                Opp. Mareri Juma'at Mosque Lalan Zaria Road, S/fulani Park Box 767, Gusau, Zamfara State.<br/>
+                TEL: +234 803 000 0000 • Email: procurement@fulbe-restaurant.ng
+              </div>
+            </div>
+            <div class="po-meta">
+              <div class="po-badge">Purchase Order</div>
+              <div class="po-id">${order.id}</div>
+              <div class="po-date">
+                <strong>Date Issued:</strong> ${order.orderDate}<br/>
+                <strong>Expected:</strong> ${order.expectedDelivery}
+              </div>
+            </div>
+          </div>
+
+          <!-- Vendor and Order Summary -->
+          <div class="two-cols">
+            <div class="card">
+              <div class="card-title">Vendor / Supplier Details</div>
+              <div class="card-content">
+                <strong>Company:</strong> ${order.supplierName}<br/>
+                <strong>Category:</strong> ${supplierCategory}<br/>
+                <strong>Contact Person:</strong> ${supplierContact}<br/>
+                <strong>Phone:</strong> ${supplierPhone}<br/>
+                <strong>Email:</strong> ${supplierEmail}
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">Procurement Information</div>
+              <div class="card-content">
+                <strong>Mode of Payment:</strong> ${order.paymentMode}<br/>
+                <strong>Payment Terms:</strong> ${order.paymentStatus}<br/>
+                <strong>Delivery Status:</strong> ${order.deliveryStatus}<br/>
+                <strong>Authorization:</strong> General Manager Approved<br/>
+                <strong>Batch / Remarks:</strong> ${order.description || 'Standard Kitchen Restock'}
+              </div>
+            </div>
+          </div>
+
+          <!-- Items Table -->
+          <table class="table">
+            <thead>
+              <tr>
+                <th style="width: 40px;">#</th>
+                <th>Commodity / Description</th>
+                <th style="width: 120px;">Unit of Measure</th>
+                <th class="right" style="width: 80px;">Qty</th>
+                <th class="right" style="width: 130px;">Unit Cost (₦)</th>
+                <th class="right" style="width: 140px;">Total (₦)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>
+                  <strong>${order.commodity}</strong>
+                  ${order.description ? `<div style="font-size: 11px; color: #555; margin-top: 2px;">${order.description}</div>` : ''}
+                </td>
+                <td>${order.unit}</td>
+                <td class="right" style="font-weight: 700;">${order.quantity}</td>
+                <td class="right" style="font-family: monospace;">${formatNaira(order.unitCost)}</td>
+                <td class="right" style="font-family: monospace; font-weight: 800; color: #024628;">${formatNaira(order.totalAmount)}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Financial Breakdown -->
+          <div class="totals-wrapper">
+            <div class="totals-table">
+              <div class="tot-row">
+                <span>Subtotal Value:</span>
+                <span style="font-family: monospace; font-weight: 700;">${formatNaira(order.totalAmount)}</span>
+              </div>
+              <div class="tot-row">
+                <span>Amount Paid (${order.paymentMode}):</span>
+                <span style="font-family: monospace; font-weight: 700; color: #024628;">${formatNaira(order.amountPaid || 0)}</span>
+              </div>
+              <div class="tot-row grand">
+                <span>TOTAL PROCUREMENT:</span>
+                <span style="font-family: monospace;">${formatNaira(order.totalAmount)}</span>
+              </div>
+
+              ${
+                order.paymentStatus === 'Fully Paid'
+                  ? `<div class="status-banner paid">
+                      <span>SETTLEMENT: FULLY PAID</span>
+                      <span style="font-family: monospace;">₦0 BALANCE</span>
+                    </div>`
+                  : order.paymentStatus === 'Partially Paid'
+                  ? `<div class="status-banner partial">
+                      <span>OUTSTANDING BALANCE:</span>
+                      <span style="font-family: monospace; font-weight: 900; color: #b45309;">${formatNaira(order.balance || 0)}</span>
+                    </div>`
+                  : `<div class="status-banner unpaid">
+                      <span>PAYABLE UPON DELIVERY:</span>
+                      <span style="font-family: monospace; font-weight: 900; color: #b91c1c;">${formatNaira(order.balance || order.totalAmount)}</span>
+                    </div>`
+              }
+            </div>
+          </div>
+
+          <!-- Signatures Section -->
+          <div class="signatures">
+            <div class="sig-box">
+              <div class="sig-line"></div>
+              <div class="sig-label">Prepared By (Store Officer)</div>
+            </div>
+            <div class="sig-box">
+              <div class="sig-line"></div>
+              <div class="sig-label">Approved By (Accountant / GM)</div>
+            </div>
+            <div class="sig-box">
+              <div class="sig-line"></div>
+              <div class="sig-label">Supplier Acceptance & Date</div>
+            </div>
+          </div>
+
+          <!-- Footer Note -->
+          <div class="footer-note">
+            This is an official procurement purchase order issued by Fulbe Restaurant & Hospitality Management.
+            Original copy retained in financial records; duplicate handed to supplier upon delivery and inspection.
+          </div>
+        </div>
+
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+            }, 350);
+          };
+        </script>
+      </body>
+    </html>
+  `;
+
+  printWindow.document.write(html);
+  printWindow.document.close();
+}
+
 export const SuppliersModule: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'directory' | 'orders'>('orders');
   const [suppliers, setSuppliers] = useState<Supplier[]>(loadSuppliersFromStorage);
@@ -152,6 +559,7 @@ export const SuppliersModule: React.FC = () => {
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [paymentModalOrder, setPaymentModalOrder] = useState<PurchaseOrder | null>(null);
+  const [previewVoucherOrder, setPreviewVoucherOrder] = useState<PurchaseOrder | null>(null);
 
   // Form State: Supplier
   const [supplierName, setSupplierName] = useState('');
@@ -299,9 +707,9 @@ export const SuppliersModule: React.FC = () => {
     setIsOrderModalOpen(true);
   };
 
-  // Save Purchase Order
-  const handleSaveOrder = (e: React.FormEvent) => {
-    e.preventDefault();
+  // Save Purchase Order (with optional immediate print)
+  const handleSaveOrder = (e?: React.FormEvent, andPrint = false) => {
+    if (e) e.preventDefault();
     if (!poSupplierId || !poCommodity.trim() || poQuantity <= 0 || poUnitCost <= 0) {
       alert('Please fill in valid commodity name, quantity, and unit cost.');
       return;
@@ -348,9 +756,53 @@ export const SuppliersModule: React.FC = () => {
       return updated;
     });
 
-    showToast(`Purchase order ${newOrder.id} generated! Mode: ${poPaymentMode}, Balance: ${formatNaira(balance)}`);
+    showToast(`Purchase order ${newOrder.id} issued successfully!`);
     setIsOrderModalOpen(false);
     setActiveTab('orders');
+
+    if (andPrint) {
+      setTimeout(() => {
+        printPurchaseOrderVoucher(newOrder, matchedSupplier);
+      }, 200);
+    }
+  };
+
+  // Preview current modal draft
+  const handlePrintCurrentDraft = () => {
+    if (!poSupplierId || !poCommodity.trim() || poQuantity <= 0 || poUnitCost <= 0) {
+      alert('Please enter commodity name, quantity, and unit cost first.');
+      return;
+    }
+    const matchedSupplier = suppliers.find(s => s.id === poSupplierId);
+    const totalAmount = poQuantity * poUnitCost;
+    const amountPaid = 
+      poPaymentStatus === 'Fully Paid' 
+        ? totalAmount 
+        : poPaymentStatus === 'Partially Paid' 
+        ? Math.min(totalAmount, Math.max(0, poAmountPaidCustom)) 
+        : 0;
+    const balance = Math.max(0, totalAmount - amountPaid);
+
+    const draftOrder: PurchaseOrder = {
+      id: `PO-26-DRAFT`,
+      supplierId: poSupplierId,
+      supplierName: matchedSupplier ? matchedSupplier.name : 'Vendor Supply',
+      commodity: poCommodity.trim(),
+      quantity: Number(poQuantity),
+      unit: poUnit,
+      unitCost: Number(poUnitCost),
+      totalAmount: totalAmount,
+      paymentMode: poPaymentMode,
+      paymentStatus: poPaymentStatus,
+      amountPaid: amountPaid,
+      balance: balance,
+      orderDate: new Date().toISOString().split('T')[0],
+      expectedDelivery: poExpectedDate || new Date().toISOString().split('T')[0],
+      deliveryStatus: 'Pending',
+      description: poNotes.trim() || `${poQuantity} ${poUnit} of ${poCommodity.trim()} @ ${formatNaira(poUnitCost)}/${poUnit}`
+    };
+
+    printPurchaseOrderVoucher(draftOrder, matchedSupplier);
   };
 
   // Toggle delivery status
@@ -380,9 +832,9 @@ export const SuppliersModule: React.FC = () => {
     setPayMode(po.paymentMode);
   };
 
-  // Record Payment towards balance
-  const handleRecordPayment = (e: React.FormEvent) => {
-    e.preventDefault();
+  // Record Payment towards balance (with optional print)
+  const handleRecordPayment = (e?: React.FormEvent, andPrint = false) => {
+    if (e) e.preventDefault();
     if (!paymentModalOrder || payAmount <= 0) return;
 
     if (payAmount > paymentModalOrder.balance) {
@@ -390,13 +842,15 @@ export const SuppliersModule: React.FC = () => {
       return;
     }
 
+    let updatedOrderCopy: PurchaseOrder | null = null;
+
     setPurchaseOrders(prev => {
       const updated = prev.map(po => {
         if (po.id === paymentModalOrder.id) {
           const newAmountPaid = (po.amountPaid || 0) + payAmount;
           const newBalance = Math.max(0, po.totalAmount - newAmountPaid);
           const newPaymentStatus: 'Fully Paid' | 'Partially Paid' = newBalance === 0 ? 'Fully Paid' : 'Partially Paid';
-          return {
+          const updatedPo: PurchaseOrder = {
             ...po,
             amountPaid: newAmountPaid,
             balance: newBalance,
@@ -404,6 +858,8 @@ export const SuppliersModule: React.FC = () => {
             paymentMode: payMode, // track latest mode of payment
             status: newPaymentStatus === 'Fully Paid' && po.deliveryStatus === 'Received' ? 'Paid' : po.status
           };
+          updatedOrderCopy = updatedPo;
+          return updatedPo;
         }
         return po;
       });
@@ -412,7 +868,15 @@ export const SuppliersModule: React.FC = () => {
     });
 
     showToast(`Recorded payment of ${formatNaira(payAmount)} for order ${paymentModalOrder.id} via ${payMode}!`);
+    const currentOrder = paymentModalOrder;
     setPaymentModalOrder(null);
+
+    if (andPrint && updatedOrderCopy) {
+      const supplier = suppliers.find(s => s.id === currentOrder.supplierId);
+      setTimeout(() => {
+        printPurchaseOrderVoucher(updatedOrderCopy!, supplier);
+      }, 200);
+    }
   };
 
   // Delete Purchase Order
@@ -473,7 +937,7 @@ export const SuppliersModule: React.FC = () => {
             <span>Suppliers & Purchases</span>
           </h2>
           <p className="text-xs text-[#73706B] mt-1">
-            Procurement workflow with item unit costs, payment modes (Cash / Transfer / POS), and live outstanding balance tracking.
+            Procurement workflow with item unit costs, payment modes (Cash / Transfer / POS), printable purchase vouchers, and live balance settlement.
           </p>
         </div>
 
@@ -676,6 +1140,7 @@ export const SuppliersModule: React.FC = () => {
               <tbody className="divide-y divide-[#E5E2DA]">
                 {filteredOrders.map((po) => {
                   const hasBalance = (po.balance || 0) > 0;
+                  const matchedSupplier = suppliers.find(s => s.id === po.supplierId);
                   return (
                     <tr key={po.id} className="hover:bg-[#FAF9F5] transition-colors">
                       {/* PO Number & Date */}
@@ -794,6 +1259,17 @@ export const SuppliersModule: React.FC = () => {
                       {/* Actions */}
                       <td className="p-3.5 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1.5">
+                          {/* Print Voucher Action */}
+                          <button
+                            type="button"
+                            onClick={() => printPurchaseOrderVoucher(po, matchedSupplier)}
+                            className="p-1.5 text-[#0b1221] hover:bg-[#E5E2DA] hover:text-[#024628] rounded transition-colors cursor-pointer"
+                            title="Print Purchase Order Voucher"
+                          >
+                            <Printer className="w-3.5 h-3.5" />
+                          </button>
+
+                          {/* Settle Balance Action */}
                           {hasBalance && (
                             <button
                               type="button"
@@ -806,6 +1282,7 @@ export const SuppliersModule: React.FC = () => {
                             </button>
                           )}
 
+                          {/* Delete Order Action */}
                           <button
                             type="button"
                             onClick={() => handleDeleteOrder(po.id)}
@@ -936,10 +1413,10 @@ export const SuppliersModule: React.FC = () => {
         )}
       </div>
 
-      {/* MODAL: Create Purchase Order */}
+      {/* MODAL: Create Purchase Order (Printable!) */}
       {isOrderModalOpen && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <form onSubmit={handleSaveOrder} className="bg-white max-w-xl w-full p-6 border border-[#1A1A1A] rounded-xl shadow-2xl space-y-4 my-8">
+          <form onSubmit={(e) => handleSaveOrder(e, false)} className="bg-white max-w-xl w-full p-6 border border-[#1A1A1A] rounded-xl shadow-2xl space-y-4 my-8">
             <div className="flex justify-between items-start border-b border-[#E5E2DA] pb-3">
               <div>
                 <h3 className="font-serif font-bold text-lg text-[#1A1A1A] flex items-center gap-2">
@@ -950,13 +1427,25 @@ export const SuppliersModule: React.FC = () => {
                   Record commodity unit cost, payment mode, and track full or partial settlement.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => setIsOrderModalOpen(false)}
-                className="text-xs font-bold text-[#8C8984] hover:text-[#1A1A1A] p-1"
-              >
-                ✕ Close
-              </button>
+              <div className="flex items-center gap-2">
+                {/* Print Preview Button in Header */}
+                <button
+                  type="button"
+                  onClick={handlePrintCurrentDraft}
+                  className="px-2.5 py-1 bg-[#FAF9F5] hover:bg-[#E5E2DA] border border-[#d1d5db] text-[#0b1221] rounded text-[11px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                  title="Print preview of current purchase order draft"
+                >
+                  <Printer className="w-3.5 h-3.5 text-[#C8B282]" />
+                  <span>Print Voucher</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsOrderModalOpen(false)}
+                  className="text-xs font-bold text-[#8C8984] hover:text-[#1A1A1A] p-1"
+                >
+                  ✕ Close
+                </button>
+              </div>
             </div>
 
             <div className="space-y-4 text-xs">
@@ -1164,13 +1653,27 @@ export const SuppliersModule: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex gap-2 pt-3 border-t border-[#E5E2DA]">
+            {/* Modal Actions */}
+            <div className="flex flex-col sm:flex-row gap-2 pt-3 border-t border-[#E5E2DA]">
+              {/* Option 1: Issue & Print */}
+              <button
+                type="button"
+                onClick={() => handleSaveOrder(undefined, true)}
+                className="flex-1 py-2.5 bg-[#0b1221] hover:bg-[#1a2333] text-white text-xs font-bold uppercase tracking-wider rounded transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
+              >
+                <Printer className="w-4 h-4 text-[#C8B282]" />
+                <span>Issue & Print P.O.</span>
+              </button>
+
+              {/* Option 2: Confirm Order */}
               <button
                 type="submit"
-                className="flex-1 py-2.5 bg-[#024628] hover:bg-[#03331d] text-white text-xs font-bold uppercase tracking-wider rounded transition-colors cursor-pointer"
+                className="flex-1 py-2.5 bg-[#024628] hover:bg-[#03331d] text-white text-xs font-bold uppercase tracking-wider rounded transition-colors cursor-pointer text-center"
               >
                 Confirm & Issue Order
               </button>
+
+              {/* Option 3: Cancel */}
               <button
                 type="button"
                 onClick={() => setIsOrderModalOpen(false)}
@@ -1186,7 +1689,7 @@ export const SuppliersModule: React.FC = () => {
       {/* MODAL: Record Balance Payment */}
       {paymentModalOrder && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-          <form onSubmit={handleRecordPayment} className="bg-white max-w-md w-full p-6 border border-[#1A1A1A] rounded-xl shadow-2xl space-y-4">
+          <form onSubmit={(e) => handleRecordPayment(e, false)} className="bg-white max-w-md w-full p-6 border border-[#1A1A1A] rounded-xl shadow-2xl space-y-4">
             <div className="flex justify-between items-start border-b border-[#E5E2DA] pb-3">
               <div>
                 <h3 className="font-serif font-bold text-lg text-[#1A1A1A] flex items-center gap-2">
@@ -1264,10 +1767,18 @@ export const SuppliersModule: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex gap-2 pt-3 border-t border-[#E5E2DA]">
+            <div className="flex flex-col sm:flex-row gap-2 pt-3 border-t border-[#E5E2DA]">
+              <button
+                type="button"
+                onClick={() => handleRecordPayment(undefined, true)}
+                className="flex-1 py-2.5 bg-[#0b1221] hover:bg-[#1a2333] text-white text-xs font-bold uppercase tracking-wider rounded transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <Printer className="w-3.5 h-3.5 text-[#C8B282]" />
+                <span>Save & Print</span>
+              </button>
               <button
                 type="submit"
-                className="flex-1 py-2.5 bg-[#024628] hover:bg-[#03331d] text-white text-xs font-bold uppercase tracking-wider rounded transition-colors cursor-pointer"
+                className="flex-1 py-2.5 bg-[#024628] hover:bg-[#03331d] text-white text-xs font-bold uppercase tracking-wider rounded transition-colors cursor-pointer text-center"
               >
                 Record Payment
               </button>
