@@ -33,6 +33,18 @@ export interface OrderItem {
   notes?: string;
 }
 
+export interface InventoryItem {
+  id: string;
+  name: string;
+  category: 'Raw Ingredients' | 'Beverages' | 'Packaging' | 'Spices & Seasoning' | 'Dairy & Poultry' | string;
+  unit: string;
+  quantityInStock: number;
+  minimumThreshold: number;
+  costPerUnit: number;
+  supplier?: string;
+  lastRestocked?: string;
+}
+
 export interface RestaurantOrder {
   id: string; // e.g. ORD-2026-0041
   tableOrRoom: string; // e.g. "Table 04" or "Room 108"

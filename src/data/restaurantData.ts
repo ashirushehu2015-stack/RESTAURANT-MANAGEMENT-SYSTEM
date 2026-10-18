@@ -1,4 +1,4 @@
-import type { RestaurantMenuItem, RestaurantOrder } from '../types';
+import type { RestaurantMenuItem, RestaurantOrder, InventoryItem } from '../types';
 
 export const INITIAL_MENU_ITEMS: RestaurantMenuItem[] = [
   // --- FOOD MENU ---
@@ -509,5 +509,74 @@ export const INITIAL_RESTAURANT_ORDERS: RestaurantOrder[] = [
     createdAt: '2026-08-02 12:15 PM',
     cashierName: 'Sarkin Fulani',
     customerName: 'Chief Emeka Okafor'
+  }
+];
+
+export const INITIAL_INVENTORY_ITEMS: InventoryItem[] = [
+  {
+    id: "INV-001",
+    name: "Rice (Long Grain)",
+    category: "Raw Ingredients",
+    unit: "bags",
+    quantityInStock: 12,
+    minimumThreshold: 5,
+    costPerUnit: 45000,
+    supplier: "Olam Agro",
+    lastRestocked: "2026-08-10"
+  },
+  {
+    id: "INV-002",
+    name: "Vegetable Cooking Oil",
+    category: "Raw Ingredients",
+    unit: "liters",
+    quantityInStock: 8,
+    minimumThreshold: 20,
+    costPerUnit: 2500,
+    supplier: "Kings Oil Distributors",
+    lastRestocked: "2026-08-01"
+  },
+  {
+    id: "INV-003",
+    name: "Beef (Boneless)",
+    category: "Raw Ingredients",
+    unit: "kg",
+    quantityInStock: 15,
+    minimumThreshold: 10,
+    costPerUnit: 3500,
+    supplier: "Local Abattoir Co.",
+    lastRestocked: "2026-08-15"
+  },
+  {
+    id: "INV-004",
+    name: "Coca-Cola (Glass Bottle)",
+    category: "Beverages",
+    unit: "crates",
+    quantityInStock: 30,
+    minimumThreshold: 15,
+    costPerUnit: 2400,
+    supplier: "NBC Ltd.",
+    lastRestocked: "2026-08-12"
+  },
+  {
+    id: "INV-005",
+    name: "Takeaway Packs (Medium)",
+    category: "Packaging",
+    unit: "packs",
+    quantityInStock: 2,
+    minimumThreshold: 5,
+    costPerUnit: 8000,
+    supplier: "Golden Plastics",
+    lastRestocked: "2026-07-28"
+  },
+  {
+    id: "INV-006",
+    name: "Fresh Tomatoes",
+    category: "Raw Ingredients",
+    unit: "kg",
+    quantityInStock: 4,
+    minimumThreshold: 10,
+    costPerUnit: 1200,
+    supplier: "Mile 12 Market",
+    lastRestocked: "2026-08-16"
   }
 ];

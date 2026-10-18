@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { RestaurantMenuItem, RestaurantOrder, OrderItem, RestaurantCategory, PaymentMethod, AuditLog, UserRole, Invoice, PaymentRecord } from '../types';
 import { PaymentFormModal } from './PaymentFormModal';
 import { Dashboard } from './Dashboard';
+import { InventoryModule } from './InventoryModule';
 import { formatNaira, formatDateFormatted } from '../utils/formatters';
 import { 
   Utensils, 
@@ -1662,11 +1663,15 @@ export const RestaurantModule: React.FC<RestaurantModuleProps> = ({
         />
       )}
 
+      {/* TAB: INVENTORY & STOCK */}
+      {activeTab === 'inventory' && (
+        <InventoryModule />
+      )}
+
       {/* OTHER TABS UNDER CONSTRUCTION */}
       {[
         'table_plan',
         'reservations',
-        'inventory',
         'suppliers',
         'expenses',
         'financials',
